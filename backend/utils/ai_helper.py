@@ -1,7 +1,9 @@
 import os
 import json
 import logging
-from groq import Groq
+import random
+from groq import Groq, RateLimitError
+from openai import OpenAI  # Used for xAI Grok API
 from dotenv import load_dotenv
 
 # Load env vars
@@ -11,74 +13,120 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configure Groq
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-client = None
-if GROQ_API_KEY:
-    client = Groq(api_key=GROQ_API_KEY)
+# --- Multi-Provider Configuration ---
+# Collects all keys and sorts them by provider
+raw_env_keys = os.getenv("GROQ_API_KEY", "").split(",")
+GROQ_KEYS = [k.strip() for k in raw_env_keys if k.strip().startswith("gsk_")]
+XAI_KEYS = [k.strip() for k in raw_env_keys if k.strip().startswith("xai-")]
+
+# Add explicit xAI key support if provided separately
+extra_xai = os.getenv("XAI_API_KEY", "").split(",")
+XAI_KEYS.extend([k.strip() for k in extra_xai if k.strip()])
+
+def call_ai_with_retry(prompt, model="llama-3.3-70b-versatile", response_format=None):
+    """
+    Fallback Chain:
+    1. Try random Groq Key (70B model)
+    2. Try random xAI Key (Grok model)
+    3. Fallback to Groq 8B (High Limits)
+    """
+    
+    # 1. Try Groq (Fastest/Cheapest)
+    if GROQ_KEYS:
+        shuffled_groq = list(GROQ_KEYS)
+        random.shuffle(shuffled_groq)
+        for key in shuffled_groq:
+            try:
+                client = Groq(api_key=key)
+                res = client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=model,
+                    response_format=response_format
+                )
+                return res.choices[0].message.content
+            except RateLimitError:
+                continue
+            except Exception as e:
+                logger.error(f"Groq Error: {str(e)}")
+                continue
+
+    # 2. Try xAI (Reliable alternative)
+    if XAI_KEYS:
+        shuffled_xai = list(XAI_KEYS)
+        random.shuffle(shuffled_xai)
+        for key in shuffled_xai:
+            try:
+                # xAI is OpenAI compatible
+                xclient = OpenAI(api_key=key, base_url="https://api.x.ai/v1")
+                # xAI JSON mode works differently - usually best to just prompt for it
+                res = xclient.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model="grok-beta", # Standard xAI model
+                )
+                return res.choices[0].message.content
+            except Exception as e:
+                logger.error(f"xAI Error: {str(e)}")
+                continue
+
+    # 3. Last Resort Fallback: Llama 8B (High Free Tier Limits)
+    if GROQ_KEYS:
+        try:
+            client = Groq(api_key=random.choice(GROQ_KEYS))
+            res = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-3.1-8b-instant",
+                response_format=response_format
+            )
+            return res.choices[0].message.content
+        except:
+            pass
+            
+    raise Exception("All AI Providers (Groq Cloud & xAI) are currently exhausted. Please add more keys or try later.")
 
 def analyze_with_groq(resume_text: str, job_description: str):
-    """
-    Sends resume and JD to Groq (Llama-3.3-70b) and returns a structured JSON response.
-    """
-    if not client:
-        raise ValueError("GROQ_API_KEY not found in environment variables.")
-
+    """Main analysis with provider fallback."""
     prompt = f"""
-    You are an expert HR Recruiter and Technical Hiring Manager.
-    Your task is to analyze the following Resume against the Job Description.
-
-    BE VERY STRICT AND HONEST. DO NOT GIVE A SAFE SCORE (LIKE 70%). IF THE RESUME IS NOT A FIT, THE SCORE SHOULD BE LOW (20-40%). IF IT'S A NEAR PERFECT FIT, THE SCORE SHOULD BE HIGH (85-98%).
-    
-    JOB DESCRIPTION:
-    {job_description}
-
-    RESUME TEXT:
-    {resume_text}
-    
-    Perform 16 critical analyses and return exactly a JSON object:
-    - score: Integer 0-100 (ATS Score)
-    - analysis: String (Detailed breakdown of match)
-    - strengths: Array of 3 key strengths
-    - weaknesses: Array of 3 areas for improvement
-    - roadmap: Array of 4 learning milestones
-    - leetcode_links: Array of 3-5 objects with exactly: {{"title": "Question Name", "url": "https://leetcode.com/problems/..."}}
-    - youtube_links: Array of 3-5 objects with exactly: {{"title": "Video Title", "url": "https://youtube.com/..."}}
-    - github_projects: Array of 2 project ideas
-    - related_jobs: Array of 3-4 objects with exactly: {{"platform": "LinkedIn", "url": "Search URL"}}
-
-    Output ONLY the raw JSON object.
-    """
-    
-    try:
-        content = call_groq_with_retry(prompt, response_format={"type": "json_object"})
-        return json.loads(content)
-    except Exception as e:
-        logger.error(f"Analysis failed: {str(e)}")
-        raise e
-
-def get_premium_suite(resume_text: str, job_description: str):
-    """
-    Generates BOTH a tailored CV and a Cover Letter in ONE AI call with rotation.
-    """
-    prompt = f"""
-    You are an expert career coach.
-    TASK 1: Rewrite resume to match JD.
-    TASK 2: Write persuasive cover letter.
+    You are an expert HR Manager. Analyze this Resume vs JD.
     
     JD: {job_description}
     RESUME: {resume_text}
     
-    Return a valid JSON object:
-    - tailored_resume: Full rewritten resume content in Markdown.
-    - cover_letter: Full cover letter content in Markdown.
+    Return ONLY a raw JSON object with:
+    - score (0-100)
+    - analysis (text)
+    - strengths (array)
+    - weaknesses (array)
+    - roadmap (array)
+    - leetcode_links ({{title: name, url: url}} array)
+    - youtube_links ({{title: name, url: url}} array)
+    - github_projects (array)
+    - related_jobs ({{platform: name, url: url}} array)
     """
-
+    
     try:
-        content = call_groq_with_retry(prompt, response_format={"type": "json_object"})
+        content = call_ai_with_retry(prompt, response_format={"type": "json_object"})
+        # Clean xAI response if it included markdown backticks
+        if content.strip().startswith("```"):
+            content = content.strip().split("```json")[-1].split("```")[0].strip()
         return json.loads(content)
     except Exception as e:
-        logger.error(f"Premium Suite Addition failed: {str(e)}")
+        logger.error(f"AI Suite Failed: {str(e)}")
+        raise e
+
+def get_premium_suite(resume_text: str, job_description: str):
+    """Premium CV + Cover Letter with fallback."""
+    prompt = f"""
+    Generate a tailored Resume and Cover Letter.
+    JD: {job_description}
+    RESUME: {resume_text}
+    Return JSON with: tailored_resume, cover_letter.
+    """
+    try:
+        content = call_ai_with_retry(prompt, response_format={"type": "json_object"})
+        if content.strip().startswith("```"):
+            content = content.strip().split("```json")[-1].split("```")[0].strip()
+        return json.loads(content)
+    except Exception as e:
         raise e
 
 def tailor_resume_with_groq(resume_text: str, job_description: str):
