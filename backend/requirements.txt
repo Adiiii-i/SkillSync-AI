@@ -5,3 +5,4 @@ PyPDF2
 pydantic
 python-dotenv
 groq
+gunicorn

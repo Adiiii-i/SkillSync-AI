@@ -16,12 +16,28 @@ load_dotenv()
 app = FastAPI(title="SkillSync AI", version="1.0.0")
 
 # --- CORS ---
-ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
+# --- CORS ---
+ALLOWED_ORIGINS = [
+    "http://localhost:5173", 
+    "http://localhost:5174", 
+    "http://localhost:3000",
+]
+
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    ALLOWED_ORIGINS.append(frontend_url)
+    if frontend_url == "*":
+        ALLOWED_ORIGINS = ["*"]
+    else:
+        # Support comma-separated URLs
+        ALLOWED_ORIGINS.extend([url.strip() for url in frontend_url.split(",")])
 
-app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def health_check():
