@@ -128,19 +128,27 @@ function App() {
 
   const handleAnalyze = async () => {
     if (!file || !jobDescription.trim()) { setError('Upload a resume & paste a job description.'); return; }
-    setLoading(true); setError(''); setResult(null); setCurrentStage(0);
+    setLoading(true); setError(''); setResult(null); setCurrentStage(0); 
     const fd = new FormData();
     fd.append('resume', file); fd.append('job_description', jobDescription);
     try {
       const res = await fetch(`${API_URL}/api/analyze`, { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        let errDesc = `Server Error (${res.status})`;
+        try { const data = await res.json(); if (data.detail) errDesc = data.detail; } catch (e) {}
+        throw new Error(errDesc);
+      }
       const data = await res.json();
       setAnalysisComplete(true);
       setTimeout(() => {
         setResult(data); setLoading(false); setAnalysisComplete(false); setCurrentStage(0);
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 200);
       }, 1200);
-    } catch { setError('Something went wrong. Try again.'); setLoading(false); setCurrentStage(0); }
+    } catch (err) { 
+      console.error(err);
+      setError(err.message || 'Connection failed. Is the backend running?'); 
+      setLoading(false); setCurrentStage(0); 
+    }
   };
 
   const handlePremium = async () => {
