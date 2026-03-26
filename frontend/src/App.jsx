@@ -147,16 +147,19 @@ function App() {
     setTailoringLoading(true); setTailoringError(''); setTailoredResume(''); setCoverLetter('');
     const fd = new FormData(); fd.append('resume', file); fd.append('job_description', jobDescription);
     try {
-      const r1 = await fetch(`${API_URL}/api/tailor`, { method: 'POST', body: fd });
-      if (!r1.ok) throw new Error(`Tailor: ${r1.status}`);
-      const t = (await r1.json()).tailored_resume || '';
-      const fd2 = new FormData(); fd2.append('resume', file); fd2.append('job_description', jobDescription);
-      const r2 = await fetch(`${API_URL}/api/cover-letter`, { method: 'POST', body: fd2 });
-      if (!r2.ok) throw new Error(`Cover: ${r2.status}`);
-      const c = (await r2.json()).cover_letter || '';
-      setTailoredResume(t); setCoverLetter(c);
-      if (!t && !c) setTailoringError('AI returned empty results. Retry.');
-    } catch (e) { setTailoringError(`Generation failed: ${e.message}`); }
+      const res = await fetch(`${API_URL}/api/premium`, { method: 'POST', body: fd });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server error: ${res.status}`);
+      }
+      const data = await res.json();
+      setTailoredResume(data.tailored_resume || '');
+      setCoverLetter(data.cover_letter || '');
+      if (!data.tailored_resume && !data.cover_letter) setTailoringError('AI returned empty results. Retry.');
+    } catch (e) { 
+      console.error("Premium Error:", e);
+      setTailoringError(`Generation failed: ${e.message}`); 
+    }
     finally { setTailoringLoading(false); setTimeout(() => tailoredRef.current?.scrollIntoView({ behavior: 'smooth' }), 300); }
   };
 

@@ -8,7 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from schemas import ScreeningResult, ErrorResponse
 from services.analyzer import screen_resume
-from utils.ai_helper import analyze_with_groq, tailor_resume_with_groq, generate_cover_letter_with_groq
+from utils.ai_helper import (
+    analyze_with_groq, 
+    get_premium_suite,
+    tailor_resume_with_groq, 
+    generate_cover_letter_with_groq
+)
 from utils.parser import extract_text_from_pdf
 
 load_dotenv()
@@ -57,6 +62,25 @@ async def analyze_resume(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/premium")
+async def premium_suite(
+    resume: UploadFile = File(...),
+    job_description: str = Form(...),
+):
+    """
+    ONE-STOP PREMIUM: Returns both tailored resume and cover letter.
+    """
+    try:
+        pdf_bytes = await resume.read()
+        resume_text = extract_text_from_pdf(pdf_bytes)
+        
+        # Single AI call for both documents
+        result = get_premium_suite(resume_text, job_description)
+        return result
+    except Exception as e:
+        print(f"DEBUG ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/tailor")
 async def tailor_cv(
     resume: UploadFile = File(...),
@@ -75,14 +99,9 @@ async def cover_letter(
     resume: UploadFile = File(...),
     job_description: str = Form(...),
 ):
-    """
-    PREMIUM: Generate a personalized cover letter.
-    """
     try:
         pdf_bytes = await resume.read()
         resume_text = extract_text_from_pdf(pdf_bytes)
-        
-        # Call AI for cover letter
         cl_markdown = generate_cover_letter_with_groq(resume_text, job_description)
         return {"cover_letter": cl_markdown}
     except Exception as e:

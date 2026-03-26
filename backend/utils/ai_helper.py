@@ -73,20 +73,49 @@ def analyze_with_groq(resume_text: str, job_description: str):
         logger.error(f"Groq API Error: {str(e)}")
         raise e
 
-def tailor_resume_with_groq(resume_text: str, job_description: str):
-    """Rewrites resume."""
-    if not client: raise ValueError("GROQ_API_KEY missing")
-    prompt = f"Target JD: {job_description}\nOriginal Resume: {resume_text}\nRewrite it to match the JD perfectly. Return Markdown only."
+def get_premium_suite(resume_text: str, job_description: str):
+    """
+    Generates BOTH a tailored CV and a Cover Letter in ONE AI call.
+    Uses JSON mode for reliability.
+    """
+    if not client:
+        raise ValueError("GROQ_API_KEY missing")
+
+    prompt = f"""
+    You are an expert career coach and technical writer.
+    
+    TASK 1: Rewrite the following resume to perfectly match the target Job Description.
+    TASK 2: Write a persuasive, custom cover letter for this role.
+    
+    JOB DESCRIPTION:
+    {job_description}
+    
+    ORIGINAL RESUME:
+    {resume_text}
+    
+    Return a valid JSON object with exactly these fields:
+    - tailored_resume: The full rewritten resume content in clean Markdown format.
+    - cover_letter: The full cover letter content in clean Markdown format.
+    
+    Focus on impact, keywords, and professional tone.
+    """
+
     try:
-        chat_completion = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.3-70b-versatile")
-        return chat_completion.choices[0].message.content
-    except Exception as e: raise e
+        logger.info("Generating Premium Suite (CV + CL)...")
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"},
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        logger.error(f"Premium Suite Generation Error: {str(e)}")
+        raise e
+
+def tailor_resume_with_groq(resume_text: str, job_description: str):
+    # Keep for backward compatibility or simple calls
+    return get_premium_suite(resume_text, job_description).get("tailored_resume", "")
 
 def generate_cover_letter_with_groq(resume_text: str, job_description: str):
-    """Crafts cover letter."""
-    if not client: raise ValueError("GROQ_API_KEY missing")
-    prompt = f"JD: {job_description}\nResume: {resume_text}\nWrite a persuasive cover letter to this role. Return Markdown only."
-    try:
-        chat_completion = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.3-70b-versatile")
-        return chat_completion.choices[0].message.content
-    except Exception as e: raise e
+    # Keep for backward compatibility or simple calls
+    return get_premium_suite(resume_text, job_description).get("cover_letter", "")
