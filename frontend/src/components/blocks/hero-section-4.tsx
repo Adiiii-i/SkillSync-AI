@@ -1,8 +1,5 @@
-'use client'
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { InfiniteSlider } from '@/components/ui/infinite-slider'
-import { cn } from '@/lib/utils'
 import { Menu, X } from 'lucide-react'
 
 // Passing onAction prop so the "Start Building" button can transition out of Landing Page
@@ -12,46 +9,17 @@ export function HeroSection({ onAction }: { onAction: () => void }) {
             <HeroHeader onAction={onAction} />
             <main className="overflow-x-hidden pt-12 text-white">
                 <section>
-                    <div className="pb-24 pt-12 md:pb-32 lg:pb-56 lg:pt-32">
-                        <div className="relative mx-auto flex max-w-6xl flex-col px-6 lg:block">
-                            <div className="mx-auto max-w-lg text-center lg:ml-0 lg:w-1/2 lg:text-left">
+                    <div className="pb-16 pt-8 md:pb-24 lg:pb-32 lg:pt-32">
+                        <div className="relative mx-auto flex max-w-6xl flex-col px-6 items-center">
+                            <div className="mx-auto max-w-2xl text-center">
                                 <h1 className="mt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:mt-16 xl:text-7xl font-display text-white">Ship 10x Faster with NS</h1>
                                 <p className="mt-8 max-w-2xl text-pretty text-lg text-gray-300">Highly customizable components for building modern websites and applications that look and feel the way you mean it.</p>
 
-                                <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
-                                    <Button onClick={onAction} size="lg" className="px-6 py-6 text-base bg-[#00FFB2] text-black hover:bg-[#00FFB2]/90 rounded-full font-bold">
+                                <div className="mt-12 flex flex-col items-center justify-center gap-4">
+                                    <Button onClick={onAction} size="lg" className="px-8 py-7 text-lg bg-[#00FFB2] text-black hover:bg-[#00FFB2]/90 rounded-full font-bold shadow-[0_0_40px_rgba(0,255,178,0.25)] transition-all">
                                         <span className="text-nowrap">Start Building Free</span>
                                     </Button>
-                                    <Button onClick={onAction} size="lg" variant="ghost" className="px-6 py-6 text-base text-gray-300 hover:text-white rounded-full">
-                                        <span className="text-nowrap">Request a demo</span>
-                                    </Button>
                                 </div>
-                            </div>
-                            <img
-                                className="pointer-events-none order-first ml-auto h-56 w-full object-cover invert sm:h-96 lg:absolute lg:inset-0 lg:-right-20 lg:-top-64 lg:order-last lg:h-max lg:w-2/3 lg:object-contain dark:mix-blend-lighten dark:invert-0"
-                                src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80"
-                                alt="Abstract Tech Object"
-                                height="4000"
-                                width="3000"
-                            />
-                        </div>
-                    </div>
-                </section>
-                <section className="bg-background/80 backdrop-blur-sm pb-16 md:pb-32 mt-12">
-                    <div className="group relative m-auto max-w-6xl px-6">
-                        <div className="flex flex-col items-center md:flex-row">
-                            <div className="md:max-w-44 md:border-r border-gray-800 md:pr-6 mb-8 md:mb-0">
-                                <p className="text-center md:text-end text-sm text-gray-400">Powering the best teams</p>
-                            </div>
-                            <div className="relative py-6 md:w-[calc(100%-11rem)] w-full overflow-hidden">
-                                <InfiniteSlider speedOnHover={20} speed={40} gap={112}>
-                                    <div className="flex items-center text-xl font-bold text-gray-400">BrandOne</div>
-                                    <div className="flex items-center text-xl font-bold text-gray-400">BrandTwo</div>
-                                    <div className="flex items-center text-xl font-bold text-gray-400">BrandThree</div>
-                                    <div className="flex items-center text-xl font-bold text-gray-400">BrandFour</div>
-                                </InfiniteSlider>
-                                <div className="bg-gradient-to-r from-background absolute inset-y-0 left-0 w-20"></div>
-                                <div className="bg-gradient-to-l from-background absolute inset-y-0 right-0 w-20"></div>
                             </div>
                         </div>
                     </div>
@@ -60,13 +28,6 @@ export function HeroSection({ onAction }: { onAction: () => void }) {
         </>
     )
 }
-
-const menuItems = [
-    { name: 'Features', href: '#' },
-    { name: 'Solution', href: '#' },
-    { name: 'Pricing', href: '#' },
-    { name: 'About', href: '#' },
-]
 
 const HeroHeader = ({ onAction }: { onAction: () => void }) => {
     const [menuState, setMenuState] = React.useState(false)
@@ -86,15 +47,6 @@ const HeroHeader = ({ onAction }: { onAction: () => void }) => {
                             </button>
 
                             <div className="hidden lg:block">
-                                <ul className="flex gap-8 text-sm">
-                                    {menuItems.map((item, index) => (
-                                        <li key={index}>
-                                            <a href={item.href} className="text-gray-400 hover:text-white duration-150">
-                                                <span>{item.name}</span>
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
                             </div>
                         </div>
 
