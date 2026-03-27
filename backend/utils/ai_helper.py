@@ -93,14 +93,19 @@ def analyze_with_groq(resume_text: str, job_description: str):
     
     Return ONLY a raw JSON object with:
     - score (0-100)
-    - analysis (text)
-    - strengths (array)
-    - weaknesses (array)
-    - roadmap (array)
-    - leetcode_links ({{title: name, url: url}} array)
-    - youtube_links ({{title: name, url: url}} array)
-    - github_projects (array)
-    - related_jobs ({{platform: name, url: url}} array)
+    - breakdown ({{technical_skills: 0-100, experience: 0-100, domain_knowledge: 0-100, education: 0-100}})
+    - summary (text)
+    - strengths (array of strings)
+    - gaps (array of strings)
+    - recommendation (text)
+    - preparation_tips (array of strings)
+    - expected_questions (array of strings)
+    - interview_rounds (array of strings)
+    - areas_of_concern (array of strings)
+    - leetcode_links ({{title: str, url: str}} array)
+    - youtube_links ({{title: str, url: str}} array)
+    - github_repos ({{title: str, url: str}} array)
+    - related_jobs ({{platform: str, url: str}} array)
     """
     
     try:
