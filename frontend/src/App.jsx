@@ -1,496 +1,365 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import html2pdf from 'html2pdf.js';
 import './index.css';
-import { LandingPage } from './LandingPage';
+import {
+  UploadCloud, Play, BarChart2, Briefcase, FileText,
+  DollarSign, Globe, File as FileIcon, CheckCircle2,
+  XCircle, AlertCircle
+} from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-const ANALYSIS_STAGES = [
-  { label: 'Parsing PDF content', icon: '📄' },
-  { label: 'Extracting skills & experience', icon: '🔍' },
-  { label: 'Matching against job description', icon: '🎯' },
-  { label: 'Generating interview insights', icon: '💡' },
-  { label: 'Finalizing report', icon: '✅' },
-];
-
-const ensureUrl = (url) => {
-  if (!url) return '#';
-  const trimmed = url.trim();
-  if (trimmed.startsWith('http')) return trimmed;
-  if (trimmed.startsWith('//')) return `https:${trimmed}`;
-  return `https://${trimmed}`;
+const formatMarkdown = (text) => {
+  if (!text) return '';
+  try {
+    const rawMarkup = marked(text);
+    return DOMPurify.sanitize(rawMarkup);
+  } catch (error) {
+    console.error("Markdown rendering error:", error);
+    return String(text); // Fallback to raw text
+  }
 };
 
-/* ── Animated Mesh Background ── */
-function MeshBackground() {
-  return (
-    <div className="mesh-bg" aria-hidden="true">
-      <div className="mesh-blob emerald" />
-      <div className="mesh-blob violet" />
-      <div className="mesh-blob small" />
-    </div>
-  );
-}
-
-/* ── Resume Mockup Card ── */
-function ResumeMockup() {
-  return (
-    <div className="resume-mockup-card">
-      <div className="mockup-header">
-        <div className="mockup-avatar"></div>
-        <div style={{flex:1}}>
-          <div className="mockup-bar" style={{width:'70%', height:12, marginBottom:6}}></div>
-          <div className="mockup-bar muted" style={{width:'50%', height:8}}></div>
-        </div>
-      </div>
-      <div className="mockup-divider"></div>
-      <div className="mockup-section-title">STRENGTHS</div>
-      <div className="mockup-bar accent" style={{width:'85%'}}></div>
-      <div className="mockup-bar accent" style={{width:'65%'}}></div>
-      <div className="mockup-bar accent" style={{width:'75%'}}></div>
-      <div className="mockup-section-title">EXPERIENCE</div>
-      <div className="mockup-bar" style={{width:'90%'}}></div>
-      <div className="mockup-bar" style={{width:'75%'}}></div>
-      <div className="mockup-bar muted" style={{width:'60%'}}></div>
-      <div className="mockup-bar muted" style={{width:'80%'}}></div>
-      <div className="mockup-ai-badge">✨ AI Suggestion</div>
-    </div>
-  );
-}
-
-/* ── UPI Pill with copy ── */
-function UpiPill() {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText('7080359767@fam');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <div className={`upi-pill ${copied ? 'copied' : ''}`} onClick={handleCopy} title="Click to copy">
-      <span>7080359767@fam</span>
-      <span className="copy-icon">{copied ? '✓ Copied' : '📋 Copy'}</span>
-    </div>
-  );
-}
-
-function App() {
-  const [showTool, setShowTool] = useState(false);
+export default function App() {
   const [file, setFile] = useState(null);
-  const [jobDescription, setJobDescription] = useState('');
-  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-  const [currentStage, setCurrentStage] = useState(0);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [tailoredResume, setTailoredResume] = useState('');
-  const [coverLetter, setCoverLetter] = useState('');
-  const [tailoringLoading, setTailoringLoading] = useState(false);
-  const [tailoringError, setTailoringError] = useState('');
-
   const fileInputRef = useRef(null);
-  const toolRef = useRef(null);
-  const resultsRef = useRef(null);
-  const tailoredRef = useRef(null);
-  const templateRef = useRef(null);
 
-  /* Scroll reveal */
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { 
-        if (e.isIntersecting) {
-          e.target.classList.add('active');
-          // Optional: stop observing once revealed
-          // observer.unobserve(e.target);
-        }
-      }),
-      { threshold: 0.05, rootMargin: '50px' }
-    );
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [result, file, loading, tailoredResume, coverLetter, tailoringLoading]);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
-  /* Auto-advance loader stages */
-  useEffect(() => {
-    if (!loading) { setCurrentStage(0); return; }
-    if (currentStage >= ANALYSIS_STAGES.length) return;
-    const t = setTimeout(() => setCurrentStage(p => p + 1), 800);
-    return () => clearTimeout(t);
-  }, [loading, currentStage]);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile && (droppedFile.type === 'application/pdf' || droppedFile.name.endsWith('.docx'))) {
+      setFile(droppedFile);
+      setError('');
+    } else {
+      setError('Please upload a valid PDF or DOCX file.');
+    }
+  };
 
-  const handleDownload = (htmlId, filename) => {
-    const el = document.getElementById(htmlId);
-    if (!el) return;
-    html2pdf().set({
-      margin: 0.5, filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    }).from(el).save().catch(err => {
-      console.error('PDF failed:', err);
-      alert('PDF download failed — try again.');
-    });
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setError('');
+    }
   };
 
   const handleAnalyze = async () => {
-    if (!file || !jobDescription.trim()) { setError('Upload a resume & paste a job description.'); return; }
-    setLoading(true); setError(''); setResult(null); setCurrentStage(0); 
-    const fd = new FormData();
-    fd.append('resume', file); fd.append('job_description', jobDescription);
+    if (!file) {
+      setError('Please select a resume file first.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('job_description', 'General Analysis'); // CV Scoring tool just does general ATS scoring
+
     try {
-      const res = await fetch(`${API_URL}/api/analyze`, { method: 'POST', body: fd });
-      if (!res.ok) {
-        let errDesc = `Server Error (${res.status})`;
-        try { const data = await res.json(); if (data.detail) errDesc = data.detail; } catch (e) {}
-        throw new Error(errDesc);
+      const targetUrl = `${API_URL}/analyze-premium`;
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
       }
-      const data = await res.json();
-      setAnalysisComplete(true);
-      setTimeout(() => {
-        setResult(data); setLoading(false); setAnalysisComplete(false); setCurrentStage(0);
-        setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 200);
-      }, 1200);
-    } catch (err) { 
-      console.error(err);
-      setError(err.message || 'Connection failed. Is the backend running?'); 
-      setLoading(false); setCurrentStage(0); 
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      setError('Failed to analyze resume. Please ensure the backend is running and try again.');
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handlePremium = async () => {
-    setTailoringLoading(true); setTailoringError(''); setTailoredResume(''); setCoverLetter('');
-    const fd = new FormData(); fd.append('resume', file); fd.append('job_description', jobDescription);
-    try {
-      const res = await fetch(`${API_URL}/api/premium`, { method: 'POST', body: fd });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Server error: ${res.status}`);
-      }
-      const data = await res.json();
-      setTailoredResume(data.tailored_resume || '');
-      setCoverLetter(data.cover_letter || '');
-      if (!data.tailored_resume && !data.cover_letter) setTailoringError('AI returned empty results. Retry.');
-    } catch (e) { 
-      console.error("Premium Error:", e);
-      setTailoringError(`Generation failed: ${e.message}`); 
-    }
-    finally { 
-      setTailoringLoading(false); 
-      // Increased delay slightly to ensure DOM is fully painted
-      setTimeout(() => tailoredRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500); 
-    }
-  };
-
-  const circumference = 2 * Math.PI * 52;
-  const stageProgress = loading ? Math.min((currentStage / ANALYSIS_STAGES.length) * 100, 100) : 0;
-  const strokeOffset = circumference - (stageProgress / 100) * circumference;
-
-  if (!showTool) {
-    return <LandingPage onEnter={() => setShowTool(true)} />;
-  }
 
   return (
-    <>
-      <MeshBackground />
-      <div className="app-wrapper">
-        {/* Modal removed */}
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-gray-900 pb-20">
+      {/* Header */}
+      <header className="bg-[#0B1120] text-white py-4 px-6 sticky top-0 z-50 overflow-x-auto w-full">
+        <div className="max-w-7xl mx-auto flex items-center justify-between min-w-max gap-8 px-4">
+          <div className="flex items-center gap-2">
+            {/* Logo placeholder */}
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+              <div className="w-4 h-4 bg-[#0B1120] rotate-45" />
+            </div>
+            <span className="font-bold text-xl tracking-tight">cv scoring</span>
+          </div>
 
-        {/* ═══ Loading Overlay ═══ */}
-        {loading && (
-          <div className="analyzing-overlay">
-            <div className="analyzing-glass-card">
-              <div className="progress-arc-container">
-                <svg viewBox="0 0 120 120" className="progress-arc-svg">
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="#00FFB2" strokeWidth="5"
-                    strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeOffset}
-                    style={{transition:'stroke-dashoffset 0.8s ease', transform:'rotate(-90deg)', transformOrigin:'center', filter:'drop-shadow(0 0 8px rgba(0,255,178,0.4))'}} />
-                </svg>
-                <div className="progress-arc-label">
-                  {analysisComplete ? <span style={{fontSize:'2rem', color:'#00FFB2'}}>✓</span> : <span>{Math.round(stageProgress)}%</span>}
-                </div>
+          <nav className="flex items-center gap-8 text-sm font-medium text-gray-300">
+            <a href="#" className="text-white bg-white/10 px-4 py-2 rounded-full cursor-default">CV Scoring (ATS)</a>
+            <a href="#" className="hover:text-white transition-colors">Job Matching Score</a>
+            <a href="#" className="hover:text-white transition-colors">Cover Letter Generator</a>
+            <a href="#" className="hover:text-white transition-colors">Salary Estimator</a>
+            <a href="#" className="hover:text-white transition-colors">Pricing</a>
+          </nav>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-white">
+              <Globe className="w-4 h-4" />
+              <span>English</span>
+            </div>
+            <button className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 text-white px-6 py-2 rounded-full font-semibold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+              Login
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Content */}
+      <div className="max-w-7xl mx-auto mt-16 px-6 mb-12">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">CV Scoring (ATS)</h1>
+          <p className="text-gray-500 text-lg md:text-xl">Analyze your resume with AI-powered insights</p>
+        </div>
+
+        {/* Feature Stepper */}
+        <div className="max-w-4xl mx-auto mb-16 relative">
+          <div className="absolute top-6 left-12 right-12 h-[2px] bg-gray-200 -z-10" />
+          <div className="flex justify-between relative z-0">
+            {/* Step 1 */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg border-4 border-[#F9FAFB] mb-4">
+                <BarChart2 className="w-5 h-5" />
               </div>
-              <div className="step-indicator">
-                {ANALYSIS_STAGES.map((s, i) => {
-                  const done = i < currentStage, active = i === currentStage && !analysisComplete, pending = i > currentStage;
-                  return (
-                    <div key={i} className={`step-item ${done ? 'done' : ''} ${active ? 'active' : ''} ${pending ? 'pending' : ''}`}>
-                      <div className="step-icon">
-                        {done ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00FFB2" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                          : active ? <div className="pulse-dot"></div>
-                          : <div className="gray-dot"></div>}
-                      </div>
-                      <span className="step-label">{s.icon} {s.label}</span>
-                    </div>
-                  );
-                })}
+              <p className="font-bold text-sm">CV Scoring (ATS)</p>
+              <p className="text-xs text-gray-400 mt-1 max-w-[120px] text-center">Analyze your resume with AI-powered insights</p>
+            </div>
+            {/* Step 2 */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center mb-4">
+                <Briefcase className="w-5 h-5" />
               </div>
+              <p className="font-semibold text-gray-500 text-sm">AI Resume Builder</p>
+              <p className="text-xs text-gray-400 mt-1 max-w-[120px] text-center">Create a professional resume with AI</p>
+            </div>
+            {/* Step 3 */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center mb-4">
+                <Globe className="w-5 h-5" />
+              </div>
+              <p className="font-semibold text-gray-500 text-sm">Job Matching Score</p>
+            </div>
+            {/* Step 4 */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center mb-4">
+                <FileText className="w-5 h-5" />
+              </div>
+              <p className="font-semibold text-gray-500 text-sm">Cover Letter Generator</p>
+            </div>
+            {/* Step 5 */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center mb-4">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <p className="font-semibold text-gray-500 text-sm">Salary Estimator</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* ═══ Navbar ═══ */}
-        <nav className="navbar">
-          <a className="nav-logo btn-click" href="#">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4.5 12C4.5 7.86 7.86 4.5 12 4.5C16.14 4.5 19.5 7.86 19.5 12C19.5 16.14 16.14 19.5 12 19.5" stroke="#00FFB2" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 4"/><path d="M12 9L15 12L12 15M15 12H9" stroke="#00FFB2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            SkillSync AI
-          </a>
-          <ul className="nav-links">
-            <li onClick={() => toolRef.current?.scrollIntoView({ behavior: 'smooth' })}>Resume Check</li>
-            <li>Cover Letter</li>
-            <li onClick={() => templateRef.current?.scrollIntoView({ behavior: 'smooth' })}>Templates</li>
-          </ul>
-          <div className="nav-btn-group">
-            <button className="nav-cta btn-click" onClick={() => toolRef.current?.scrollIntoView({ behavior: 'smooth' })}>Get Started</button>
-          </div>
-        </nav>
+        {/* Dashboard Tools */}
+        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 min-h-[600px]">
+          
+          {/* Left Column: Upload */}
+          <div className="lg:col-span-4 flex flex-col">
+            <h2 className="text-xl font-bold mb-3">Select Resume for Analysis</h2>
+            <p className="text-gray-500 text-sm mb-6">Choose a sample resume below and click "CV Scoring (ATS)" to see our AI-powered analysis in action.</p>
 
-        {/* ═══ Hero + Upload ═══ */}
-        <section className="hero-tool-layout" ref={toolRef}>
-          <div className="hero-content reveal">
-            <div className="hero-subtitle">AI Resume Screening</div>
-            <h1 className="hero-title">Is your resume good enough?</h1>
-            <p className="hero-desc">
-              A next-gen AI resume checker performing 16 critical analyses to ensure 
-              your resume converts into interview callbacks.
-            </p>
+            <div 
+              className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center mb-6 hover:bg-gray-50 transition-colors cursor-pointer"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadCloud className="w-8 h-8 text-gray-400 mb-4" />
+              {file ? (
+                <p className="font-medium text-blue-600 truncate w-full text-center px-4">{file.name}</p>
+              ) : (
+                <>
+                  <p className="font-semibold text-gray-800 mb-1">Click to upload your own resume</p>
+                  <p className="text-xs text-gray-500">PDF or DOCX (max 5MB)</p>
+                </>
+              )}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={handleFileChange} 
+                accept=".pdf,.docx" 
+              />
+            </div>
 
-            <div className="upload-container">
-              <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
-                <div className="upload-title">Drop your resume here or choose a file</div>
-                <div className="upload-subtitle">PDF only · Max 2MB</div>
-                <input ref={fileInputRef} type="file" accept=".pdf" style={{display:'none'}}
-                  onChange={(e) => { if(e.target.files[0]) setFile(e.target.files[0]) }} />
-                {file ? <div className="file-indicator">✓ {file.name}</div> : <div className="upload-btn-fake">Upload Resume</div>}
-                <div className="privacy-lock">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9.24 2 7 4.24 7 7V10H6C4.9 10 4 10.9 4 12V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V12C20 10.9 19.1 10 18 10H17V7C17 4.24 14.76 2 12 2ZM9 7C9 5.35 10.35 4 12 4C13.65 4 15 5.35 15 7V10H9V7Z"/></svg>
-                  Privacy guaranteed
+            <div className="my-4 flex items-center justify-center relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+              <span className="relative bg-white px-4 text-xs text-gray-400">or try our sample resumes</span>
+            </div>
+
+            {/* Sample Resumes (Non-functional placeholders for UI replication) */}
+            <div className="space-y-3 mb-8">
+              <div className="border border-gray-200 rounded-lg p-4 flex items-start gap-3 hover:border-blue-400 cursor-pointer transition-colors bg-white">
+                <FileIcon className="w-6 h-6 text-blue-500 shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm">Isabel Mercado - Marketing Manager</p>
+                  <p className="text-xs text-gray-500">Marketing Manager with 5+ years experience</p>
                 </div>
               </div>
-              <div className="form-group" style={{marginTop:24}}>
-                <textarea className="job-textarea" placeholder="Paste the target Job Description..." value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
+              <div className="border border-blue-400 bg-blue-50/30 rounded-lg p-4 flex items-start gap-3 cursor-pointer transition-colors">
+                <FileIcon className="w-6 h-6 text-blue-500 shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm">John Smith - Software Engineer</p>
+                  <p className="text-xs text-gray-500">Senior Software Engineer with 8+ years experience</p>
+                </div>
               </div>
-              {error && <div className="error-block">{error}</div>}
-              <button className="analyze-btn btn-click" onClick={handleAnalyze} disabled={loading || !file || !jobDescription}>Start Analysis</button>
+            </div>
+
+            <div className="mt-auto">
+              {error && <p className="text-red-500 text-sm mb-3 font-medium bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
+              <button 
+                onClick={handleAnalyze}
+                disabled={loading}
+                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${loading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : file ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg hover:opacity-90' : 'bg-[#E2E8F0] text-gray-600 hover:bg-[#CBD5E1]'}`}
+              >
+                {loading ? (
+                  <div className="animate-spin w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full" />
+                ) : (
+                  <Play className={`w-5 h-5 ${file ? 'text-white' : 'text-gray-500'}`} />
+                )}
+                {loading ? 'Analyzing Profile...' : 'Analyze Resume'}
+              </button>
             </div>
           </div>
-          <div className="hero-mockup reveal">
-            <ResumeMockup />
-          </div>
-        </section>
 
-        {/* ═══ Marketing Sections ═══ */}
-        {!result && !loading && (
-          <>
-            <section className="dark-section reveal">
-              <div className="dark-header">
-                <h2>Our AI goes beyond typos and punctuation</h2>
-                <p>Built-in deep intelligence to craft a resume tailored to the exact position you're applying for.</p>
-              </div>
-              <div className="checklist-layout">
-                <div className="checklist-intro">
-                  <h3>Resume optimization checklist</h3>
-                  <p>16 crucial checks across 5 categories — content, format, keywords, style, and skills.</p>
-                </div>
-                <div className="checklist-grid">
-                  {[
-                    { title: 'Content', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>, items: ['ATS parse rate', 'Word repetition', 'Grammar check', 'Impact quantification'] },
-                    { title: 'Format', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>, items: ['File format', 'Resume length', 'Bullet brevity'] },
-                    { title: 'Skills', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, items: ['Hard skills', 'Soft skills'] },
-                    { title: 'Style', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>, items: ['Design analysis', 'Active voice', 'Buzzwords'] },
-                  ].map(c => (
-                    <div className="c-card" key={c.title}>
-                      <div className="c-icon">{c.icon}</div>
-                      <h4>{c.title}</h4>
-                      <ul className="c-list">{c.items.map(i => <li key={i}>{i}</li>)}</ul>
+          {/* Right Column: Preview / Results */}
+          <div className="lg:col-span-8 flex flex-col h-full min-h-[500px]">
+            {loading ? (
+              <div className="flex-1 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center bg-gray-50/50 p-12">
+                 <div className="relative w-24 h-24 mb-6">
+                    <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <BarChart2 className="w-8 h-8 text-blue-500 animate-pulse" />
                     </div>
-                  ))}
                 </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Analyzing Resume...</h3>
+                <p className="text-gray-500 text-center max-w-sm">Our AI is currently benchmarking your resume against millions of data points to generate your ATS score.</p>
               </div>
-            </section>
-
-            <section className="feature-section reveal">
-              <div className="feature-row">
-                <div className="feature-text">
-                  <h2>Rewrite your resume with AI</h2>
-                  <p>Powered by state-of-the-art LLMs, our engine rewrites your resume to perfectly match the job description — optimizing keywords, structure, and impact.</p>
-                  <p style={{marginTop:16}}>Content suggestions, summary generation, and buzzword removal — all automated.</p>
-                </div>
-                <div className="feature-visual" style={{padding:0, overflow:'hidden'}}>
-                  <ResumeMockup />
-                </div>
-              </div>
-              <div className="feature-row reverse" style={{marginTop:100}}>
-                <div className="feature-text">
-                  <h2>ATS compatibility analysis</h2>
-                  <p>We've reverse-engineered popular applicant tracking systems to check your resume's parsability rate, keyword density, and format compliance.</p>
-                </div>
-                <div className="feature-visual ats-score-visual">
-                  <div className="ats-inner">
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}}>
-                      <span style={{fontWeight:700, color:'#fff', fontFamily:'var(--font-display)'}}>ATS Score</span>
-                      <span style={{fontWeight:800, color:'#00FFB2', fontSize:'1.5rem', fontFamily:'var(--font-display)', textShadow:'0 0 20px rgba(0,255,178,0.3)'}}>92%</span>
-                    </div>
-                    <div style={{height:6, background:'#1e1e2e', borderRadius:8, overflow:'hidden'}}>
-                      <div style={{width:'92%', height:'100%', background:'linear-gradient(90deg, #00FFB2, #059669)', borderRadius:8, boxShadow:'0 0 12px rgba(0,255,178,0.3)'}}></div>
-                    </div>
-                    <div className="ats-chips">
-                      {['Keywords ✓','Format ✓','Length ✓','Contact ✓'].map(t => <span key={t} className="ats-chip">{t}</span>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            {/* ═══ Templates Coming Soon ═══ */}
-            <section className="templates-section" ref={templateRef}>
-              <div className="templates-header">
-                <span className="coming-soon-badge">Coming Soon</span>
-                <h2 className="templates-title">Premium Resume Templates</h2>
-                <p className="templates-desc">Professionally designed, ATS-optimized templates crafted to make your resume stand out. Pick a style, import your data, and download.</p>
-              </div>
-              <div className="templates-grid">
-                {[
-                  { name: 'Minimal Pro', color: '#00FFB2', bars: [90, 70, 85, 60, 75, 50] },
-                  { name: 'Executive Dark', color: '#7C3AED', bars: [85, 65, 90, 55, 80, 45] },
-                  { name: 'Creative Edge', color: '#3b82f6', bars: [80, 90, 60, 75, 50, 85] },
-                  { name: 'Classic Clean', color: '#f59e0b', bars: [75, 85, 70, 90, 65, 55] },
-                ].map((t, idx) => (
-                  <div className="template-card" key={idx}>
-                    <div className="template-preview" style={{'--accent': t.color}}>
-                      <div className="tpl-header">
-                        <div className="tpl-avatar" style={{background: `linear-gradient(135deg, ${t.color}, ${t.color}88)`}}></div>
-                        <div style={{flex:1}}>
-                          <div className="tpl-bar" style={{width:'65%', height:10, background: t.color, opacity: 0.8}}></div>
-                          <div className="tpl-bar" style={{width:'45%', height:7, marginTop:6}}></div>
+            ) : result ? (
+              <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                {/* Results Screen */}
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-8 mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-50 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+                    
+                    <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row items-center gap-8 mb-8 border-b border-gray-100 pb-8">
+                            <div className="relative">
+                                {/* Score Circular Progress */}
+                                <svg className="w-32 h-32 transform -rotate-90">
+                                    <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-100" />
+                                    <circle 
+                                        cx="64" 
+                                        cy="64" 
+                                        r="56" 
+                                        stroke="currentColor" 
+                                        strokeWidth="12" 
+                                        fill="transparent" 
+                                        strokeDasharray={2 * Math.PI * 56} 
+                                        strokeDashoffset={2 * Math.PI * 56 * (1 - (result?.score || 0) / 100)} 
+                                        className={result?.score >= 80 ? 'text-green-500' : result?.score >= 60 ? 'text-amber-500' : 'text-red-500'} 
+                                        strokeLinecap="round"
+                                        style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-3xl font-black">{result?.score || 0}</span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ATS Score</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold mb-2">Resume Score Analysis</h3>
+                                <p className="text-gray-500 mb-4">{result?.summary}</p>
+                                <div className="flex gap-3 flex-wrap">
+                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold border border-blue-100">Parser Friendly</span>
+                                    <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold border border-green-100">Keyword Optimized</span>
+                                </div>
+                            </div>
                         </div>
-                      </div>
-                      <div className="tpl-divider"></div>
-                      {t.bars.map((w, i) => (
-                        <div className="tpl-bar" key={i} style={{width:`${w}%`, marginBottom: 6}}></div>
-                      ))}
-                      <div className="template-lock-overlay">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                <h4 className="flex items-center gap-2 font-bold mb-3 text-gray-800">
+                                    <CheckCircle2 className="w-5 h-5 text-green-500" /> Strengths
+                                </h4>
+                                <ul className="space-y-2">
+                                    {result?.breakdown?.strengths?.map((str, i) => (
+                                        <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                            <span className="text-green-500 mt-0.5">•</span> {str}
+                                        </li>
+                                    )) || <li className="text-sm text-gray-500 italic">No specific strengths highlighted.</li>}
+                                </ul>
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                <h4 className="flex items-center gap-2 font-bold mb-3 text-gray-800">
+                                    <AlertCircle className="w-5 h-5 text-amber-500" /> Areas for Improvement
+                                </h4>
+                                <ul className="space-y-2">
+                                    {result?.breakdown?.weaknesses?.map((weak, i) => (
+                                        <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                            <span className="text-amber-500 mt-0.5">•</span> {weak}
+                                        </li>
+                                    )) || <li className="text-sm text-gray-500 italic">No specific weaknesses found.</li>}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {result?.recommendation && (
+                            <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100/50">
+                                <h4 className="font-bold mb-2 text-gray-800 block">AI Strategic Recommendations</h4>
+                                <div 
+                                    className="prose prose-sm max-w-none text-gray-700" 
+                                    dangerouslySetInnerHTML={{ __html: formatMarkdown(result.recommendation) }} 
+                                />
+                            </div>
+                        )}
                     </div>
-                    <div className="template-info">
-                      <span className="template-name">{t.name}</span>
-                      <span className="template-soon" style={{color: t.color}}>Soon</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </>
-        )}
-
-        {/* ═══ Results ═══ */}
-        {result && (
-          <section className="results-section" ref={resultsRef}>
-            <div className="score-card reveal">
-              <div className="score-ring">
-                <svg viewBox="0 0 100 100"><circle className="track" cx="50" cy="50" r="45" /><circle className="fill-ring" cx="50" cy="50" r="45" stroke="#00FFB2" strokeDasharray={2*Math.PI*45} strokeDashoffset={2*Math.PI*45-(result.score/100)*(2*Math.PI*45)} /></svg>
-                <div className="score-number"><span className="value">{result.score}</span><span className="unit">Score</span></div>
-              </div>
-              <div className="score-breakdown-panel">
-                {['technical_skills','experience','domain_knowledge','education'].map(k => (
-                  <div className="breakdown-item" key={k}>
-                    <div className="label">{k.replace('_', ' ')} <span>{result.breakdown[k]}%</span></div>
-                    <div className="b-bar"><div className="b-fill" style={{width:`${result.breakdown[k]}%`}}></div></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="summary-card reveal"><p>{result.summary}</p></div>
-
-            <h3 className="section-title reveal">🎯 Interview Preparation</h3>
-            <div className="prep-grid reveal">
-              <div className="prep-card"><h4>🔍 Expected Questions</h4><ul>{result.expected_questions?.map((q,i) => <li key={i}>{q}</li>)}</ul></div>
-              <div className="prep-card"><h4>⚠️ Areas of Concern</h4><ul>{result.areas_of_concern?.map((c,i) => <li key={i}>{c}</li>)}</ul></div>
-              <div className="prep-card"><h4>🏢 Expected Rounds</h4><ol>{result.interview_rounds?.map((r,i) => <li key={i}>{r}</li>)}</ol></div>
-              <div className="prep-card"><h4>💡 Pro Tips</h4><ul>{result.preparation_tips?.map((t,i) => <li key={i}>{t}</li>)}</ul></div>
-            </div>
-
-            <h3 className="section-title reveal">🗺️ Learning Roadmap</h3>
-            <div className="roadmap-grid reveal">
-              {result.leetcode_links?.length > 0 && <div className="resource-card"><h4>LeetCode</h4><div className="link-group">{result.leetcode_links.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.youtube_links?.length > 0 && <div className="resource-card"><h4>YouTube</h4><div className="link-group">{result.youtube_links.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.github_repos?.length > 0 && <div className="resource-card"><h4>GitHub</h4><div className="link-group">{result.github_repos.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.related_jobs?.length > 0 && <div className="resource-card"><h4>Jobs</h4><div className="link-group">{result.related_jobs.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.platform} ↗</a>)}</div></div>}
-            </div>
-
-            {!(tailoredResume || coverLetter || tailoringLoading) && (
-              <div className="combo-banner reveal" style={{marginTop:40}}>
-                <h3>Tailor Your Documents</h3>
-                <p style={{marginBottom:16}}>Let AI rewrite your Resume and Cover Letter to perfectly match this job description.</p>
-                <button className="p-btn p-btn-primary btn-click" onClick={handlePremium}>Generate ATS-Friendly Resume & Cover Letter</button>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ═══ Tailored Output ═══ */}
-        {(tailoringLoading || tailoredResume || coverLetter || tailoringError) && (
-          <section className="results-section" ref={tailoredRef} style={{paddingTop:20}}>
-            {tailoringLoading ? (
-              <div style={{textAlign:'center', padding:'60px 0'}}>
-                <div className="analyzing-ring" style={{margin:'0 auto 16px'}}></div>
-                <p style={{color:'#A0A0B8', fontWeight:500}}>Generating your documents...</p>
-              </div>
-            ) : tailoringError ? (
-              <div style={{background:'rgba(255,107,107,0.06)', padding:24, borderRadius:12, border:'1px solid rgba(255,107,107,0.15)', textAlign:'center'}}>
-                <p style={{color:'#ff6b6b', fontWeight:600, marginBottom:12}}>⚠️ {tailoringError}</p>
-                <button className="btn-click" style={{background:'#00FFB2', color:'#0A0A0F', border:'none', padding:'10px 24px', borderRadius:8, fontWeight:700, cursor:'pointer'}} onClick={handlePremium}>Retry</button>
+                </div>
               </div>
             ) : (
-              <div style={{display:'flex', flexDirection:'column', gap:40}}>
-                {tailoredResume && (
-                  <div style={{animation: 'fadeInUp 0.8s ease both'}}>
-                    <div style={{background:'rgba(0,255,178,0.06)', padding:'16px 24px', borderLeft:'3px solid #00FFB2', borderRadius:8, marginBottom:24}}>
-                      <h3 style={{color:'#00FFB2', fontSize:'1.2rem', marginBottom:6, fontWeight:700, fontFamily:'var(--font-display)'}}>🎉 Your Tailored CV</h3>
-                      <p style={{color:'#A0A0B8', fontSize:'0.95rem'}}>Matching rate: <strong style={{color:'#00FFB2'}}>95%+</strong> for this role.</p>
-                      <button className="btn-click" style={{marginTop:12, background:'#00FFB2', color:'#0A0A0F', border:'none', padding:'10px 20px', borderRadius:6, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6}} onClick={() => handleDownload('tailored-cv-doc','Optimized_Resume.pdf')}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download PDF
-                      </button>
-                    </div>
-                    <div id="tailored-cv-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(tailoredResume || ''))}}></div>
-                  </div>
-                )}
-                {coverLetter && (
-                  <div style={{animation: 'fadeInUp 0.8s ease both', animationDelay: '0.2s'}}>
-                    <div style={{background:'rgba(124,58,237,0.08)', padding:'16px 24px', borderLeft:'3px solid #7C3AED', borderRadius:8, marginBottom:24}}>
-                      <h3 style={{color:'#A78BFA', fontSize:'1.2rem', marginBottom:6, fontWeight:700, fontFamily:'var(--font-display)'}}>📝 Cover Letter</h3>
-                      <p style={{color:'#A0A0B8', fontSize:'0.95rem'}}>Tailored to bridge your experience with the role requirements.</p>
-                      <button className="btn-click" style={{marginTop:12, background:'#7C3AED', color:'#fff', border:'none', padding:'10px 20px', borderRadius:6, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6}} onClick={() => handleDownload('cover-letter-doc','Cover_Letter.pdf')}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download PDF
-                      </button>
-                    </div>
-                    <div id="cover-letter-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(coverLetter || ''))}}></div>
-                  </div>
-                )}
+              <div className="flex-1 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center bg-gray-50/50 p-12">
+                <FileText className="w-16 h-16 text-gray-300 mb-6" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Ready to see the magic?</h3>
+                <p className="text-gray-500 text-center max-w-sm">Select a sample resume or upload your own, and click "Analyze Resume" to see our AI-powered analysis in action.</p>
               </div>
             )}
-          </section>
-        )}
+          </div>
 
-        {/* ═══ Footer ═══ */}
-        <footer className="footer reveal">
-          <div style={{display:'flex', flexDirection:'column', gap:4}}>
-            <div className="footer-brand">SkillSync AI</div>
-            <div style={{fontSize:'0.85rem', color:'#60607a', fontWeight:500}}>Developed by <strong style={{color:'#00FFB2'}}>AADI</strong></div>
-          </div>
-          <div className="footer-links">
-            <a href="#" className="footer-link">Terms</a>
-            <a href="#" className="footer-link">Privacy</a>
-            <a href="mailto:adiexzzz@proton.me" className="contact-badge btn-click">adiexzzz@proton.me</a>
-          </div>
-        </footer>
+        </div>
       </div>
-    </>
+      
+      {/* Footer minimal representation */}
+      <footer className="bg-[#0B1120] text-gray-400 py-12 px-6 mt-16 mt-auto">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between pt-8 border-t border-gray-800 text-sm">
+            <p>© 2026 SkillSync AI. All rights reserved.</p>
+            <div className="flex gap-6 mt-4 md:mt-0 text-gray-500">
+                <a href="#" className="hover:text-gray-300">Privacy Policy</a>
+                <a href="#" className="hover:text-gray-300">Terms of Service</a>
+                <a href="#" className="hover:text-gray-300">Cookie Policy</a>
+            </div>
+          </div>
+      </footer>
+    </div>
   );
 }
-
-export default App;
