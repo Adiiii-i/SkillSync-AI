@@ -1,9 +1,7 @@
 import os
 import json
 import logging
-import random
-from groq import Groq, RateLimitError
-from openai import OpenAI  # Used for xAI Grok API
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load env vars
@@ -13,75 +11,38 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- Multi-Provider Configuration ---
-# Collects all keys and sorts them by provider
-raw_env_keys = os.getenv("GROQ_API_KEY", "").split(",")
-GROQ_KEYS = [k.strip() for k in raw_env_keys if k.strip().startswith("gsk_")]
-XAI_KEYS = [k.strip() for k in raw_env_keys if k.strip().startswith("xai-")]
+NV_KEY = os.getenv("NVIDIA_API_KEY", "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")
 
-# Add explicit xAI key support if provided separately
-extra_xai = os.getenv("XAI_API_KEY", "").split(",")
-XAI_KEYS.extend([k.strip() for k in extra_xai if k.strip()])
-
-def call_ai_with_retry(prompt, model="llama-3.3-70b-versatile", response_format=None):
+def call_ai_with_retry(prompt, model="google/gemma-2-2b-it", response_format=None):
     """
-    Fallback Chain:
-    1. Try random Groq Key (70B model)
-    2. Try random xAI Key (Grok model)
-    3. Fallback to Groq 8B (High Limits)
+    Calls the NVIDIA API (OpenAI Compatible) with the selected Gemma model.
     """
+    if not NV_KEY:
+        raise ValueError("NVIDIA_API_KEY is not set.")
     
-    # 1. Try Groq (Fastest/Cheapest)
-    if GROQ_KEYS:
-        shuffled_groq = list(GROQ_KEYS)
-        random.shuffle(shuffled_groq)
-        for key in shuffled_groq:
-            try:
-                client = Groq(api_key=key)
-                res = client.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model=model,
-                    response_format=response_format
-                )
-                return res.choices[0].message.content
-            except RateLimitError:
-                continue
-            except Exception as e:
-                logger.error(f"Groq Error: {str(e)}")
-                continue
-
-    # 2. Try xAI (Reliable alternative)
-    if XAI_KEYS:
-        shuffled_xai = list(XAI_KEYS)
-        random.shuffle(shuffled_xai)
-        for key in shuffled_xai:
-            try:
-                # xAI is OpenAI compatible
-                xclient = OpenAI(api_key=key, base_url="https://api.x.ai/v1")
-                # xAI JSON mode works differently - usually best to just prompt for it
-                res = xclient.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model="grok-beta", # Standard xAI model
-                )
-                return res.choices[0].message.content
-            except Exception as e:
-                logger.error(f"xAI Error: {str(e)}")
-                continue
-
-    # 3. Last Resort Fallback: Llama 8B (High Free Tier Limits)
-    if GROQ_KEYS:
-        try:
-            client = Groq(api_key=random.choice(GROQ_KEYS))
-            res = client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model="llama-3.1-8b-instant",
-                response_format=response_format
-            )
-            return res.choices[0].message.content
-        except:
-            pass
-            
-    raise Exception("All AI Providers (Groq Cloud & xAI) are currently exhausted. Please add more keys or try later.")
+    try:
+        client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=NV_KEY
+        )
+        
+        # Note: some open-weights APIs via Nvidia Nim don't support JSON Object struct natively.
+        # We will gracefully fall back by prompting if response_format fails implicitly.
+        kwargs = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2,
+            "top_p": 0.7,
+            "max_tokens": 1024,
+        }
+        
+        # NVIDIA API for gemma-2-2b-it rejects the 'response_format' keyword violently
+        # so we rely completely on prompt engineering for JSON parsing.
+        res = client.chat.completions.create(**kwargs)
+        return res.choices[0].message.content
+    except Exception as e:
+        logger.error(f"NVIDIA API Error: {str(e)}")
+        raise e
 
 def analyze_with_groq(resume_text: str, job_description: str):
     """Main analysis with provider fallback."""
