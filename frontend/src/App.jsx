@@ -83,18 +83,10 @@ function App() {
   const [error, setError] = useState('');
   const [currentStage, setCurrentStage] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
-  
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [tailoredResume, setTailoredResume] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [tailoringLoading, setTailoringLoading] = useState(false);
   const [tailoringError, setTailoringError] = useState('');
-
-  const [showCoupon, setShowCoupon] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [couponError, setCouponError] = useState('');
 
   const fileInputRef = useRef(null);
   const toolRef = useRef(null);
@@ -197,50 +189,7 @@ function App() {
     <>
       <MeshBackground />
       <div className="app-wrapper">
-
-        {/* ═══ Premium Modal ═══ */}
-        {showPremiumModal && (
-          <div className="modal-overlay">
-            <div className="premium-modal">
-              <button className="modal-close btn-click" onClick={() => setShowPremiumModal(false)}>×</button>
-              <div className="premium-header">
-                <h2>Pro Suite</h2>
-                <span className="price">{couponApplied ? 'FREE' : '₹49 only'}</span>
-              </div>
-
-              <div style={{textAlign:'center', marginBottom: 24}}>
-                <p style={{fontSize:'0.9rem', color:'#A0A0B8', marginBottom:16, fontWeight:500}}>Pay via Paytm · GPay · PhonePe</p>
-                <img src="/qr.png" alt="Payment QR" style={{width:'100%', maxWidth:180, margin:'0 auto', borderRadius:12, border:'1px solid rgba(255,255,255,0.08)', boxShadow:'0 4px 20px rgba(0,0,0,0.3)'}} />
-                <div style={{marginTop:16}}>
-                  <UpiPill />
-                </div>
-              </div>
-
-              {!couponApplied && (
-                <>
-                  <input type="text" className="utr-input" placeholder="12-digit UPI UTR" />
-                  <div style={{textAlign:'left', marginBottom:16, marginTop:-4}}>
-                    {!showCoupon ? (
-                      <span className="btn-click" style={{fontSize:'0.85rem', color:'#00FFB2', cursor:'pointer', fontWeight:600}} onClick={() => setShowCoupon(true)}>Have a coupon code?</span>
-                    ) : (
-                      <div style={{display:'flex', gap:8, marginTop:8}}>
-                        <input type="text" className="utr-input" style={{marginBottom:0, flex:1}} placeholder="Enter coupon" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} />
-                        <button className="btn-click" style={{background:'#00FFB2', color:'#0A0A0F', border:'none', borderRadius:8, padding:'0 16px', fontSize:'0.85rem', fontWeight:700, cursor:'pointer'}}
-                          onClick={() => { couponCode === 'AADI001' ? (setCouponApplied(true), setCouponError('')) : setCouponError('Invalid coupon code'); }}>
-                          Apply
-                        </button>
-                      </div>
-                    )}
-                    {couponError && <div style={{color:'#ff6b6b', fontSize:'0.8rem', marginTop:6, fontWeight:500}}>{couponError}</div>}
-                  </div>
-                </>
-              )}
-              <button className="unlock-btn btn-click" onClick={() => { setIsUnlocked(true); setShowPremiumModal(false); handlePremium(); }}>
-                {couponApplied ? 'Unlock for Free →' : 'Unlock Suite →'}
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Modal removed */}
 
         {/* ═══ Loading Overlay ═══ */}
         {loading && (
@@ -465,11 +414,11 @@ function App() {
               {result.related_jobs?.length > 0 && <div className="resource-card"><h4>Jobs</h4><div className="link-group">{result.related_jobs.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.platform} ↗</a>)}</div></div>}
             </div>
 
-            {!isUnlocked && (
+            {!(tailoredResume || coverLetter || tailoringLoading) && (
               <div className="combo-banner reveal" style={{marginTop:40}}>
-                <h3>Unlock Career Pro Suite</h3>
-                <p style={{marginBottom:16}}>AI-tailored Resume & Cover Letter to crush the competition.</p>
-                <button className="p-btn p-btn-primary btn-click" onClick={() => setShowPremiumModal(true)}>Get Full Suite (₹49)</button>
+                <h3>Tailor Your Documents</h3>
+                <p style={{marginBottom:16}}>Let AI rewrite your Resume and Cover Letter to perfectly match this job description.</p>
+                <button className="p-btn p-btn-primary btn-click" onClick={handlePremium}>Generate ATS-Friendly Resume & Cover Letter</button>
               </div>
             )}
           </section>
