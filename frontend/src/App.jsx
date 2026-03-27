@@ -182,7 +182,11 @@ function App() {
       console.error("Premium Error:", e);
       setTailoringError(`Generation failed: ${e.message}`); 
     }
-    finally { setTailoringLoading(false); setTimeout(() => tailoredRef.current?.scrollIntoView({ behavior: 'smooth' }), 300); }
+    finally { 
+      setTailoringLoading(false); 
+      // Increased delay slightly to ensure DOM is fully painted
+      setTimeout(() => tailoredRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500); 
+    }
   };
 
   const circumference = 2 * Math.PI * 52;
@@ -487,7 +491,7 @@ function App() {
             ) : (
               <div style={{display:'flex', flexDirection:'column', gap:40}}>
                 {tailoredResume && (
-                  <div className="reveal">
+                  <div style={{animation: 'fadeInUp 0.8s ease both'}}>
                     <div style={{background:'rgba(0,255,178,0.06)', padding:'16px 24px', borderLeft:'3px solid #00FFB2', borderRadius:8, marginBottom:24}}>
                       <h3 style={{color:'#00FFB2', fontSize:'1.2rem', marginBottom:6, fontWeight:700, fontFamily:'var(--font-display)'}}>🎉 Your Tailored CV</h3>
                       <p style={{color:'#A0A0B8', fontSize:'0.95rem'}}>Matching rate: <strong style={{color:'#00FFB2'}}>95%+</strong> for this role.</p>
@@ -500,7 +504,7 @@ function App() {
                   </div>
                 )}
                 {coverLetter && (
-                  <div className="reveal">
+                  <div style={{animation: 'fadeInUp 0.8s ease both', animationDelay: '0.2s'}}>
                     <div style={{background:'rgba(124,58,237,0.08)', padding:'16px 24px', borderLeft:'3px solid #7C3AED', borderRadius:8, marginBottom:24}}>
                       <h3 style={{color:'#A78BFA', fontSize:'1.2rem', marginBottom:6, fontWeight:700, fontFamily:'var(--font-display)'}}>📝 Cover Letter</h3>
                       <p style={{color:'#A0A0B8', fontSize:'0.95rem'}}>Tailored to bridge your experience with the role requirements.</p>
