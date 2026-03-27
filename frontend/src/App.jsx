@@ -7,6 +7,7 @@ import {
   DollarSign, Globe, File as FileIcon, CheckCircle2,
   XCircle, AlertCircle
 } from 'lucide-react';
+import FeatureNavigation from './components/blocks/feature-nav';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -138,33 +139,17 @@ export default function App() {
         </div>
 
         {/* Feature Stepper */}
-        <div className="max-w-4xl mx-auto mb-10 md:mb-16 relative">
-          <div className="hidden md:block absolute top-6 left-[10%] right-[10%] h-[2px] bg-border -z-10" />
-          <div className="flex overflow-x-auto md:overflow-visible gap-4 md:justify-between pb-6 custom-scrollbar snap-x relative z-0 px-2 md:px-0">
-            {TABS.map((tab) => {
-              const isActive = activeTab.id === tab.id;
-              return (
-                <div 
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab); setResult(null); setError(''); }}
-                  className="flex flex-col items-center cursor-pointer min-w-[110px] md:min-w-[120px] snap-center group"
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-[0_0_20px_var(--color-primary)] border-4 border-background scale-110' : 'bg-card text-muted-foreground border-2 border-border group-hover:border-primary/50 group-hover:text-foreground'}`}>
-                    <tab.icon className="w-5 h-5" />
-                  </div>
-                  <p className={`font-semibold text-xs md:text-sm text-center transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
-                    {tab.name}
-                  </p>
-                  {isActive && (
-                    <p className="hidden md:block text-[10px] text-muted-foreground mt-1 text-center max-w-[120px] leading-tight animate-in fade-in slide-in-from-top-2">
-                       {tab.desc}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <FeatureNavigation 
+          activeId={activeTab.id} 
+          onActionSelect={(id) => {
+            const selected = TABS.find(t => t.id === id);
+            if (selected) {
+              setActiveTab(selected);
+              setResult(null);
+              setError('');
+            }
+          }} 
+        />
 
         {/* Dashboard Tools */}
         <div className="bg-card rounded-2xl shadow-xl border border-border p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 min-h-[600px]">
