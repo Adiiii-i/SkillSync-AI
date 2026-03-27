@@ -17,11 +17,20 @@ const formatMarkdown = (text) => {
     return DOMPurify.sanitize(rawMarkup);
   } catch (error) {
     console.error("Markdown rendering error:", error);
-    return String(text); // Fallback to raw text
+    return String(text); 
   }
 };
 
+const TABS = [
+  { id: 'cv-scoring', name: 'CV Scoring (ATS)', desc: 'Analyze your resume with AI-powered insights', icon: BarChart2, prompt: 'Analyze this resume against standard ATS criteria. Score it out of 100.' },
+  { id: 'resume-builder', name: 'AI Resume Builder', desc: 'Create a professional resume outline with AI', icon: Briefcase, prompt: 'Extract my resume data and formulate an optimized, professional resume structure.' },
+  { id: 'job-matching', name: 'Job Matching Score', desc: 'Match your skills against industry standards', icon: Globe, prompt: 'Evaluate my resume against standard industry job requirements for my role. Give me a match percentage.' },
+  { id: 'cover-letter', name: 'Cover Letter Generator', desc: 'Generate a perfect cover letter in seconds', icon: FileText, prompt: 'Write a highly professional and compelling cover letter based precisely on my resume experience.' },
+  { id: 'salary', name: 'Salary Estimator', desc: 'Estimate your market value accurately', icon: DollarSign, prompt: 'Estimate my salary range based on my experience, domain, and skills in the current global market.' },
+];
+
 export default function App() {
+  const [activeTab, setActiveTab] = useState(TABS[0]);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -63,7 +72,7 @@ export default function App() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('job_description', 'General Analysis'); // CV Scoring tool just does general ATS scoring
+    formData.append('job_description', activeTab.prompt); 
 
     try {
       const targetUrl = `${API_URL}/analyze-premium`;
@@ -99,15 +108,20 @@ export default function App() {
             <span className="font-bold text-xl tracking-tight">SkillSync AI</span>
           </div>
 
-          <nav className="flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <a href="#" className="text-primary-foreground bg-primary px-4 py-2 rounded-full cursor-default">CV Scoring (ATS)</a>
-            <a href="#" className="hover:text-foreground transition-colors">Job Matching Score</a>
-            <a href="#" className="hover:text-foreground transition-colors">Cover Letter Generator</a>
-            <a href="#" className="hover:text-foreground transition-colors">Salary Estimator</a>
-            <a href="#" className="hover:text-foreground transition-colors">Pricing</a>
+          <nav className="flex items-center gap-4 lg:gap-8 text-sm font-medium text-muted-foreground overflow-x-auto whitespace-nowrap custom-scrollbar pb-2 pt-2 md:pb-0 md:pt-0 max-w-full">
+            {TABS.map((tab) => (
+               <a 
+                 key={tab.id}
+                 href={`#${tab.id}`}
+                 onClick={(e) => { e.preventDefault(); setActiveTab(tab); setResult(null); setError(''); }}
+                 className={`transition-colors flex-shrink-0 ${activeTab.id === tab.id ? "text-primary-foreground bg-primary px-4 py-2 rounded-full font-bold shadow-sm shadow-primary/20" : "hover:text-foreground md:px-2"}`}
+               >
+                 {tab.name}
+               </a>
+            ))}
           </nav>
 
-          <div className="flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground">
               <Globe className="w-4 h-4" />
               <span>English</span>
@@ -117,53 +131,38 @@ export default function App() {
       </header>
 
       {/* Hero Content */}
-      <div className="max-w-7xl mx-auto mt-16 px-6 mb-12">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">SkillSync AI</h1>
-          <p className="text-muted-foreground text-lg md:text-xl">Analyze your resume with AI-powered insights</p>
+      <div className="max-w-7xl mx-auto mt-10 md:mt-16 px-4 md:px-6 mb-8 md:mb-12">
+        <div className="text-center mb-10 md:mb-16">
+          <h1 className="text-3xl md:text-5xl font-extrabold mb-3 md:mb-4 tracking-tight text-foreground transition-all">{activeTab.name}</h1>
+          <p className="text-muted-foreground text-base md:text-xl transition-all max-w-2xl mx-auto">{activeTab.desc}</p>
         </div>
 
         {/* Feature Stepper */}
-        <div className="max-w-4xl mx-auto mb-16 relative">
-          <div className="absolute top-6 left-12 right-12 h-[2px] bg-border -z-10" />
-          <div className="flex justify-between relative z-0">
-            {/* Step 1 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg border-4 border-background mb-4">
-                <BarChart2 className="w-5 h-5" />
-              </div>
-              <p className="font-bold text-sm text-foreground">CV Scoring (ATS)</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[120px] text-center">Analyze your resume with AI-powered insights</p>
-            </div>
-            {/* Step 2 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-card text-muted-foreground border-2 border-border flex items-center justify-center mb-4">
-                <Briefcase className="w-5 h-5" />
-              </div>
-              <p className="font-semibold text-muted-foreground text-sm">AI Resume Builder</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[120px] text-center">Create a professional resume with AI</p>
-            </div>
-            {/* Step 3 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-card text-muted-foreground border-2 border-border flex items-center justify-center mb-4">
-                <Globe className="w-5 h-5" />
-              </div>
-              <p className="font-semibold text-muted-foreground text-sm">Job Matching Score</p>
-            </div>
-            {/* Step 4 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-card text-muted-foreground border-2 border-border flex items-center justify-center mb-4">
-                <FileText className="w-5 h-5" />
-              </div>
-              <p className="font-semibold text-muted-foreground text-sm">Cover Letter Generator</p>
-            </div>
-            {/* Step 5 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-card text-muted-foreground border-2 border-border flex items-center justify-center mb-4">
-                <DollarSign className="w-5 h-5" />
-              </div>
-              <p className="font-semibold text-muted-foreground text-sm">Salary Estimator</p>
-            </div>
+        <div className="max-w-4xl mx-auto mb-10 md:mb-16 relative">
+          <div className="hidden md:block absolute top-6 left-[10%] right-[10%] h-[2px] bg-border -z-10" />
+          <div className="flex overflow-x-auto md:overflow-visible gap-4 md:justify-between pb-6 custom-scrollbar snap-x relative z-0 px-2 md:px-0">
+            {TABS.map((tab) => {
+              const isActive = activeTab.id === tab.id;
+              return (
+                <div 
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab); setResult(null); setError(''); }}
+                  className="flex flex-col items-center cursor-pointer min-w-[110px] md:min-w-[120px] snap-center group"
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-[0_0_20px_var(--color-primary)] border-4 border-background scale-110' : 'bg-card text-muted-foreground border-2 border-border group-hover:border-primary/50 group-hover:text-foreground'}`}>
+                    <tab.icon className="w-5 h-5" />
+                  </div>
+                  <p className={`font-semibold text-xs md:text-sm text-center transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                    {tab.name}
+                  </p>
+                  {isActive && (
+                    <p className="hidden md:block text-[10px] text-muted-foreground mt-1 text-center max-w-[120px] leading-tight animate-in fade-in slide-in-from-top-2">
+                       {tab.desc}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
