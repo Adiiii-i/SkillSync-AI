@@ -21,6 +21,7 @@ async def screen_resume(resume_bytes: bytes, job_description: str) -> ScreeningR
     # 2. Analyze with Groq (Llama-3.3-70B)
     logger.info("Starting Groq analysis...")
     ai_result = analyze_with_groq(resume_text, job_description)
+    logger.info(f"AI RAW RESULT: {ai_result}")
 
     # 3. Validate structure with Pydantic
     logger.info("Validating result with Pydantic...")
