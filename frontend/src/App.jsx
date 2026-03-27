@@ -14,6 +14,14 @@ const ANALYSIS_STAGES = [
   { label: 'Finalizing report', icon: '✅' },
 ];
 
+const ensureUrl = (url) => {
+  if (!url) return '#';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http')) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  return `https://${trimmed}`;
+};
+
 /* ── Animated Mesh Background ── */
 function MeshBackground() {
   return (
@@ -97,12 +105,18 @@ function App() {
   /* Scroll reveal */
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('active'); }),
-      { threshold: 0.1 }
+      (entries) => entries.forEach((e) => { 
+        if (e.isIntersecting) {
+          e.target.classList.add('active');
+          // Optional: stop observing once revealed
+          // observer.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.05, rootMargin: '50px' }
     );
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [result, file, loading, tailoredResume, coverLetter]);
+  }, [result, file, loading, tailoredResume, coverLetter, tailoringLoading]);
 
   /* Auto-advance loader stages */
   useEffect(() => {
@@ -441,10 +455,10 @@ function App() {
 
             <h3 className="section-title reveal">🗺️ Learning Roadmap</h3>
             <div className="roadmap-grid reveal">
-              {result.leetcode_links?.length > 0 && <div className="resource-card"><h4>LeetCode</h4><div className="link-group">{result.leetcode_links.map((l,i)=><a key={i} href={l.url} className="link-pill" target="_blank" rel="noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.youtube_links?.length > 0 && <div className="resource-card"><h4>YouTube</h4><div className="link-group">{result.youtube_links.map((l,i)=><a key={i} href={l.url} className="link-pill" target="_blank" rel="noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.github_repos?.length > 0 && <div className="resource-card"><h4>GitHub</h4><div className="link-group">{result.github_repos.map((l,i)=><a key={i} href={l.url} className="link-pill" target="_blank" rel="noreferrer">{l.title} ↗</a>)}</div></div>}
-              {result.related_jobs?.length > 0 && <div className="resource-card"><h4>Jobs</h4><div className="link-group">{result.related_jobs.map((l,i)=><a key={i} href={l.url} className="link-pill" target="_blank" rel="noreferrer">{l.platform} ↗</a>)}</div></div>}
+              {result.leetcode_links?.length > 0 && <div className="resource-card"><h4>LeetCode</h4><div className="link-group">{result.leetcode_links.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
+              {result.youtube_links?.length > 0 && <div className="resource-card"><h4>YouTube</h4><div className="link-group">{result.youtube_links.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
+              {result.github_repos?.length > 0 && <div className="resource-card"><h4>GitHub</h4><div className="link-group">{result.github_repos.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.title} ↗</a>)}</div></div>}
+              {result.related_jobs?.length > 0 && <div className="resource-card"><h4>Jobs</h4><div className="link-group">{result.related_jobs.map((l,i)=><a key={i} href={ensureUrl(l.url)} className="link-pill" target="_blank" rel="noopener noreferrer">{l.platform} ↗</a>)}</div></div>}
             </div>
 
             {!isUnlocked && (

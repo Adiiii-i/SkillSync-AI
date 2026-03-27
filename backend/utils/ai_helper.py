@@ -108,10 +108,10 @@ def analyze_with_groq(resume_text: str, job_description: str):
       "expected_questions": ["...", "..."],
       "interview_rounds": ["...", "..."],
       "areas_of_concern": ["...", "..."],
-      "leetcode_links": [{{ "title": "...", "url": "..." }}],
-      "youtube_links": [{{ "title": "...", "url": "..." }}],
-      "github_repos": [{{ "title": "...", "url": "..." }}],
-      "related_jobs": [{{ "platform": "...", "url": "..." }}]
+      "leetcode_links": [{{ "title": "LeetCode Problem", "url": "https://leetcode.com/..." }}],
+      "youtube_links": [{{ "title": "Expert Tutorial", "url": "https://youtube.com/..." }}],
+      "github_repos": [{{ "title": "Reference Project", "url": "https://github.com/..." }}],
+      "related_jobs": [{{ "platform": "Glassdoor", "url": "https://glassdoor.com/..." }}]
     }}
     """
     
