@@ -33,7 +33,6 @@ export default function FeatureNavigation({ activeId, onActionSelect }: { active
       icon: Briefcase,
       action: () => {
         if (onActionSelect) onActionSelect('resume-builder');
-        setActiveModal('resume-builder');
       }
     },
     {
@@ -43,7 +42,6 @@ export default function FeatureNavigation({ activeId, onActionSelect }: { active
       icon: Globe,
       action: () => {
         if (onActionSelect) onActionSelect('job-matching');
-        setActiveModal('job-matching');
       }
     },
     {
@@ -53,7 +51,6 @@ export default function FeatureNavigation({ activeId, onActionSelect }: { active
       icon: FileText,
       action: () => {
         if (onActionSelect) onActionSelect('cover-letter');
-        setActiveModal('cover-letter');
       }
     },
     {
@@ -63,7 +60,6 @@ export default function FeatureNavigation({ activeId, onActionSelect }: { active
       icon: CircleDollarSign,
       action: () => {
         if (onActionSelect) onActionSelect('salary');
-        setActiveModal('salary');
       }
     }
   ];

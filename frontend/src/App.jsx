@@ -76,7 +76,11 @@ export default function App() {
     formData.append('job_description', activeTab.prompt); 
 
     try {
-      const targetUrl = `${API_URL}/analyze-premium`;
+      let endpoint = '/api/analyze';
+      if (activeTab.id === 'resume-builder') endpoint = '/api/tailor';
+      if (activeTab.id === 'cover-letter') endpoint = '/api/cover-letter';
+
+      const targetUrl = `${API_URL}${endpoint}`;
       const response = await fetch(targetUrl, {
         method: 'POST',
         body: formData,
@@ -86,7 +90,15 @@ export default function App() {
         throw new Error(`Server responded with status: ${response.status}`);
       }
 
-      const data = await response.json();
+      let data = await response.json();
+
+      // Normalize backend outputs to fit the dashboard UI payload
+      if (data.tailored_resume) {
+         data = { summary: 'AI Resume Builder successfully extracted and restructured your professional data.', recommendation: data.tailored_resume };
+      } else if (data.cover_letter) {
+         data = { summary: 'Cover Letter successfully generated based on your profile.', recommendation: data.cover_letter };
+      }
+
       setResult(data);
     } catch (err) {
       console.error('Analysis failed:', err);
@@ -245,66 +257,77 @@ export default function App() {
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
                     
                     <div className="relative z-10">
-                        <div className="flex flex-col md:flex-row items-center gap-8 mb-8 border-b border-border/50 pb-8">
-                            <div className="relative">
-                                {/* Score Circular Progress */}
-                                <svg className="w-32 h-32 transform -rotate-90">
-                                    <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted" />
-                                    <circle 
-                                        cx="64" 
-                                        cy="64" 
-                                        r="56" 
-                                        stroke="currentColor" 
-                                        strokeWidth="12" 
-                                        fill="transparent" 
-                                        strokeDasharray={2 * Math.PI * 56} 
-                                        strokeDashoffset={2 * Math.PI * 56 * (1 - (result?.score || 0) / 100)} 
-                                        className={result?.score >= 80 ? 'text-[#10b981]' : result?.score >= 60 ? 'text-[#f59e0b]' : 'text-destructive'} 
-                                        strokeLinecap="round"
-                                        style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-black text-foreground">{result?.score || 0}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ATS Score</span>
+                        {/* Only show Score ring and breakdown for ATS and Job Matching */}
+                        {['cv-scoring', 'job-matching'].includes(activeTab.id) ? (
+                            <>
+                                <div className="flex flex-col md:flex-row items-center gap-8 mb-8 border-b border-border/50 pb-8">
+                                    <div className="relative">
+                                        {/* Score Circular Progress */}
+                                        <svg className="w-32 h-32 transform -rotate-90">
+                                            <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted" />
+                                            <circle 
+                                                cx="64" 
+                                                cy="64" 
+                                                r="56" 
+                                                stroke="currentColor" 
+                                                strokeWidth="12" 
+                                                fill="transparent" 
+                                                strokeDasharray={2 * Math.PI * 56} 
+                                                strokeDashoffset={2 * Math.PI * 56 * (1 - (result?.score || 0) / 100)} 
+                                                className={result?.score >= 80 ? 'text-[#10b981]' : result?.score >= 60 ? 'text-[#f59e0b]' : 'text-destructive'} 
+                                                strokeLinecap="round"
+                                                style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className="text-3xl font-black text-foreground">{result?.score || 0}</span>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ATS Score</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold mb-2 text-foreground">Resume Score Analysis</h3>
+                                        <p className="text-muted-foreground mb-4">{result?.summary}</p>
+                                        <div className="flex gap-3 flex-wrap">
+                                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Parser Friendly</span>
+                                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Keyword Optimized</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold mb-2 text-foreground">Resume Score Analysis</h3>
-                                <p className="text-muted-foreground mb-4">{result?.summary}</p>
-                                <div className="flex gap-3 flex-wrap">
-                                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Parser Friendly</span>
-                                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Keyword Optimized</span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-                                <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
-                                    <CheckCircle2 className="w-5 h-5 text-[#10b981]" /> Strengths
-                                </h4>
-                                <ul className="space-y-2">
-                                    {result?.breakdown?.strengths?.map((str, i) => (
-                                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                            <span className="text-[#10b981] mt-0.5">•</span> {str}
-                                        </li>
-                                    )) || <li className="text-sm text-muted-foreground italic">No specific strengths highlighted.</li>}
-                                </ul>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
+                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
+                                            <CheckCircle2 className="w-5 h-5 text-[#10b981]" /> Strengths
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {result?.breakdown?.strengths?.map((str, i) => (
+                                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                                    <span className="text-[#10b981] mt-0.5">•</span> {str}
+                                                </li>
+                                            )) || <li className="text-sm text-muted-foreground italic">No specific strengths highlighted.</li>}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
+                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
+                                            <AlertCircle className="w-5 h-5 text-[#f59e0b]" /> Areas for Improvement
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {result?.breakdown?.weaknesses?.map((weak, i) => (
+                                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                                    <span className="text-[#f59e0b] mt-0.5">•</span> {weak}
+                                                </li>
+                                            )) || <li className="text-sm text-muted-foreground italic">No specific weaknesses found.</li>}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="mb-8 border-b border-border/50 pb-8 text-center">
+                                <FileText className="w-12 h-12 text-primary mx-auto mb-4" />
+                                <h3 className="text-2xl font-bold mb-2 text-foreground">{activeTab.name} Created Successfully</h3>
+                                <p className="text-muted-foreground">{result?.summary}</p>
                             </div>
-                            <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-                                <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
-                                    <AlertCircle className="w-5 h-5 text-[#f59e0b]" /> Areas for Improvement
-                                </h4>
-                                <ul className="space-y-2">
-                                    {result?.breakdown?.weaknesses?.map((weak, i) => (
-                                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                            <span className="text-[#f59e0b] mt-0.5">•</span> {weak}
-                                        </li>
-                                    )) || <li className="text-sm text-muted-foreground italic">No specific weaknesses found.</li>}
-                                </ul>
-                            </div>
-                        </div>
+                        )}
 
                         {result?.recommendation && (
                             <div className="mt-6 bg-primary/5 rounded-xl p-6 border border-primary/10">
