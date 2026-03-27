@@ -135,6 +135,9 @@ def get_premium_suite(resume_text: str, job_description: str):
     """
     try:
         content = call_ai_with_retry(prompt, response_format={"type": "json_object"})
+        if not content:
+            raise ValueError("AI API Exhausted: All configured API keys are rate-limited or failed.")
+            
         if content.strip().startswith("```"):
             content = content.strip().split("```json")[-1].split("```")[0].strip()
         return json.loads(content)

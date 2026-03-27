@@ -94,15 +94,21 @@ export default function App() {
 
       // Normalize backend outputs to fit the dashboard UI payload
       if (data.tailored_resume) {
-         data = { summary: 'AI Resume Builder successfully extracted and restructured your professional data.', recommendation: data.tailored_resume };
+         let mdContent = typeof data.tailored_resume === 'string' 
+             ? data.tailored_resume 
+             : '```json\n' + JSON.stringify(data.tailored_resume, null, 2) + '\n```';
+         data = { summary: 'AI Resume Builder successfully extracted and restructured your professional data.', recommendation: mdContent };
       } else if (data.cover_letter) {
-         data = { summary: 'Cover Letter successfully generated based on your profile.', recommendation: data.cover_letter };
+         let mdContent = typeof data.cover_letter === 'string' 
+             ? data.cover_letter 
+             : '```json\n' + JSON.stringify(data.cover_letter, null, 2) + '\n```';
+         data = { summary: 'Cover Letter successfully generated based on your profile.', recommendation: mdContent };
       }
 
       setResult(data);
     } catch (err) {
       console.error('Analysis failed:', err);
-      setError('Failed to analyze resume. Please ensure the backend is running and try again.');
+      setError(`Analysis Failed: ${err.message}. Please try again or check your API Rate Limits.`);
     } finally {
       setLoading(false);
     }
