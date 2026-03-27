@@ -500,7 +500,7 @@ function App() {
                         Download PDF
                       </button>
                     </div>
-                    <div id="tailored-cv-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(tailoredResume))}}></div>
+                    <div id="tailored-cv-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(tailoredResume || ''))}}></div>
                   </div>
                 )}
                 {coverLetter && (
@@ -513,7 +513,7 @@ function App() {
                         Download PDF
                       </button>
                     </div>
-                    <div id="cover-letter-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(coverLetter))}}></div>
+                    <div id="cover-letter-doc" className="document-preview" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(marked(coverLetter || ''))}}></div>
                   </div>
                 )}
               </div>
