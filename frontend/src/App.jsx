@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import html2pdf from 'html2pdf.js';
 import './index.css';
+import { LandingPage } from './LandingPage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -76,6 +77,7 @@ function UpiPill() {
 }
 
 function App() {
+  const [showTool, setShowTool] = useState(false);
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [result, setResult] = useState(null);
@@ -184,6 +186,10 @@ function App() {
   const circumference = 2 * Math.PI * 52;
   const stageProgress = loading ? Math.min((currentStage / ANALYSIS_STAGES.length) * 100, 100) : 0;
   const strokeOffset = circumference - (stageProgress / 100) * circumference;
+
+  if (!showTool) {
+    return <LandingPage onEnter={() => setShowTool(true)} />;
+  }
 
   return (
     <>
