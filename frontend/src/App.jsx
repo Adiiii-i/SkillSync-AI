@@ -72,7 +72,7 @@ export default function App() {
     setResult(null);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('resume', file);
     formData.append('job_description', activeTab.prompt); 
 
     try {
