@@ -96,7 +96,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
               <div className="w-4 h-4 bg-primary-foreground rotate-45" />
             </div>
-            <span className="font-bold text-xl tracking-tight">cv scoring</span>
+            <span className="font-bold text-xl tracking-tight">SkillSync AI</span>
           </div>
 
           <nav className="flex items-center gap-8 text-sm font-medium text-muted-foreground">
@@ -112,9 +112,6 @@ export default function App() {
               <Globe className="w-4 h-4" />
               <span>English</span>
             </div>
-            <button className="bg-primary text-primary-foreground hover:opacity-90 px-6 py-2 rounded-full font-semibold transition-all">
-              Login
-            </button>
           </div>
         </div>
       </header>
@@ -122,7 +119,7 @@ export default function App() {
       {/* Hero Content */}
       <div className="max-w-7xl mx-auto mt-16 px-6 mb-12">
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">CV Scoring (ATS)</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-foreground">SkillSync AI</h1>
           <p className="text-muted-foreground text-lg md:text-xl">Analyze your resume with AI-powered insights</p>
         </div>
 
