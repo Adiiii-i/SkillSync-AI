@@ -5,7 +5,7 @@
 
 // Define the base URL for the backend.
 // In development, this points to your local server. In production, it can use an env variable.
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://skillsync-ai-y0rk.onrender.com';
 
 /**
  * Generic fetch wrapper to handle errors consistently.

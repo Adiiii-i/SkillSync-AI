@@ -26,6 +26,7 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173", 
     "http://localhost:5174", 
     "http://localhost:3000",
+    "https://skill-sync-ai-nine.vercel.app",
 ]
 
 frontend_url = os.getenv("FRONTEND_URL")
