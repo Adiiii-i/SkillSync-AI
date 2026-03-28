@@ -4,12 +4,15 @@ import DOMPurify from 'dompurify';
 import './index.css';
 import {
   UploadCloud, Play, BarChart2, Briefcase, FileText,
-  DollarSign, Globe, File as FileIcon, CheckCircle2,
-  XCircle, AlertCircle
+  File as FileIcon, CheckCircle2,
+  XCircle, AlertCircle, Loader2, Download, Copy, X,
+  Target, Send, Globe
 } from 'lucide-react';
 import FeatureNavigation from './components/blocks/feature-nav';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { 
+  analyzeAtsScore, buildTailoredResume,
+  generateCoverLetter, generateSkillGap, generateOutreach 
+} from './services/api';
 
 const formatMarkdown = (text) => {
   if (!text) return '';
@@ -25,9 +28,9 @@ const formatMarkdown = (text) => {
 const TABS = [
   { id: 'cv-scoring', name: 'CV Scoring (ATS)', desc: 'Analyze your resume with AI-powered insights', icon: BarChart2, prompt: 'Analyze this resume against standard ATS criteria. Score it out of 100.' },
   { id: 'resume-builder', name: 'AI Resume Builder', desc: 'Create a professional resume outline with AI', icon: Briefcase, prompt: 'Extract my resume data and formulate an optimized, professional resume structure.' },
-  { id: 'job-matching', name: 'Job Matching Score', desc: 'Match your skills against industry standards', icon: Globe, prompt: 'Evaluate my resume against standard industry job requirements for my role. Give me a match percentage.' },
+  { id: 'upskill', name: 'Skill Gap Roadmap', desc: 'Identify exactly what skills you are missing for this role', icon: Target, prompt: 'Compare this resume against the job description to find missing skills and provide a roadmap.' },
   { id: 'cover-letter', name: 'Cover Letter Generator', desc: 'Generate a perfect cover letter in seconds', icon: FileText, prompt: 'Write a highly professional and compelling cover letter based precisely on my resume experience.' },
-  { id: 'salary', name: 'Salary Estimator', desc: 'Estimate your market value accurately', icon: DollarSign, prompt: 'Estimate my salary range based on my experience, domain, and skills in the current global market.' },
+  { id: 'outreach', name: 'Outreach Generator', desc: 'Craft professional cold emails & DMs', icon: Send, prompt: 'Write a short, punchy cold outreach message targeting this exact role in both professional and creative tones.' },
 ];
 
 export default function App() {
@@ -36,11 +39,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [modalContent, setModalContent] = useState(null); // 'privacy', 'terms', 'cookie', or null
+  const [outreachTone, setOutreachTone] = useState('professional'); // 'professional' or 'creative'
   const fileInputRef = useRef(null);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleDragOver = (e) => { e.preventDefault(); };
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -66,49 +70,34 @@ export default function App() {
       setError('Please select a resume file first.');
       return;
     }
-
     setLoading(true);
     setError('');
     setResult(null);
 
-    const formData = new FormData();
-    formData.append('resume', file);
-    formData.append('job_description', activeTab.prompt); 
-
     try {
-      let endpoint = '/api/analyze';
-      if (activeTab.id === 'resume-builder') endpoint = '/api/tailor';
-      if (activeTab.id === 'cover-letter') endpoint = '/api/cover-letter';
-
-      const targetUrl = `${API_URL}${endpoint}`;
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
+      let data;
+      switch (activeTab.id) {
+        case 'cv-scoring':
+          data = await analyzeAtsScore(file, activeTab.prompt);
+          break;
+        case 'resume-builder':
+          data = await buildTailoredResume(file, activeTab.prompt);
+          break;
+        case 'upskill':
+          data = await generateSkillGap(file, jobDescription, activeTab.prompt);
+          break;
+        case 'cover-letter':
+          data = await generateCoverLetter(file, jobDescription, activeTab.prompt);
+          break;
+        case 'outreach':
+          data = await generateOutreach(file, jobDescription, activeTab.prompt);
+          break;
+        default:
+          throw new Error("Unknown feature selected.");
       }
-
-      let data = await response.json();
-
-      // Normalize backend outputs to fit the dashboard UI payload
-      if (data.tailored_resume) {
-         let mdContent = typeof data.tailored_resume === 'string' 
-             ? data.tailored_resume 
-             : '```json\n' + JSON.stringify(data.tailored_resume, null, 2) + '\n```';
-         data = { summary: 'AI Resume Builder successfully extracted and restructured your professional data.', recommendation: mdContent };
-      } else if (data.cover_letter) {
-         let mdContent = typeof data.cover_letter === 'string' 
-             ? data.cover_letter 
-             : '```json\n' + JSON.stringify(data.cover_letter, null, 2) + '\n```';
-         data = { summary: 'Cover Letter successfully generated based on your profile.', recommendation: mdContent };
-      }
-
       setResult(data);
     } catch (err) {
-      console.error('Analysis failed:', err);
-      setError(`Analysis Failed: ${err.message}. Please try again or check your API Rate Limits.`);
+      setError(`Analysis Failed: ${err.message || 'Server error'}. Please try again or check API logs.`);
     } finally {
       setLoading(false);
     }
@@ -201,27 +190,22 @@ export default function App() {
               />
             </div>
 
-            <div className="my-4 flex items-center justify-center relative">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
-              <span className="relative bg-card px-4 text-xs text-muted-foreground">or try our sample resumes</span>
-            </div>
-
-            {/* Sample Resumes (Non-functional placeholders for UI replication) */}
-            <div className="space-y-3 mb-8">
-              <div className="border border-border/60 rounded-lg p-4 flex items-start gap-3 hover:border-primary cursor-pointer transition-colors bg-card">
-                <FileIcon className="w-6 h-6 text-primary shrink-0" />
-                <div>
-                  <p className="font-semibold text-sm text-card-foreground">Isabel Mercado - Marketing Manager</p>
-                  <p className="text-xs text-muted-foreground">Marketing Manager with 5+ years experience</p>
-                </div>
+            {/* Job Description Input */}
+            <div className="mb-6">
+              <div className="my-4 flex items-center justify-center relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+                <span className="relative bg-card px-4 text-xs text-muted-foreground">add job description (optional)</span>
               </div>
-              <div className="border border-primary bg-primary/10 rounded-lg p-4 flex items-start gap-3 cursor-pointer transition-colors">
-                <FileIcon className="w-6 h-6 text-primary shrink-0" />
-                <div>
-                  <p className="font-semibold text-sm text-primary">John Smith - Software Engineer</p>
-                  <p className="text-xs text-primary/80">Senior Software Engineer with 8+ years experience</p>
-                </div>
-              </div>
+              <textarea
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                placeholder="Paste the job description here for a more accurate, targeted analysis..."
+                className="w-full min-h-[120px] resize-y p-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
+              />
+              <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1">
+                <Briefcase className="w-3 h-3" />
+                Adding a JD helps our AI tailor the analysis to the specific role.
+              </p>
             </div>
 
             <div className="mt-auto">
@@ -247,42 +231,34 @@ export default function App() {
               <div className="flex-1 border-2 border-dashed border-border/60 rounded-2xl flex flex-col items-center justify-center bg-muted/20 p-12">
                  <div className="relative w-24 h-24 mb-6">
                     <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <BarChart2 className="w-8 h-8 text-primary animate-pulse" />
+                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent flex items-center justify-center">
+                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
                     </div>
                 </div>
-                <h3 className="text-xl font-bold text-card-foreground mb-2">Analyzing Resume...</h3>
-                <p className="text-muted-foreground text-center max-w-sm">Our AI is currently benchmarking your resume against millions of data points to generate your ATS score.</p>
+                <h3 className="text-xl font-bold text-card-foreground mb-2">Analyzing Profile...</h3>
+                <p className="text-muted-foreground text-center max-w-sm">Our AI is processing your request. Please wait a moment while we map millions of data points.</p>
               </div>
             ) : result ? (
               <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                 {/* Results Screen */}
-                <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-8 mb-6 relative overflow-hidden">
+                <div className="bg-card border border-border/50 rounded-2xl shadow-sm p-6 md:p-8 mb-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
                     
-                    <div className="relative z-10">
-                        {/* Only show Score ring and breakdown for ATS and Job Matching */}
-                        {['cv-scoring', 'job-matching'].includes(activeTab.id) ? (
+                    <div className="relative z-10 flex flex-col gap-8">
+                        {/* FEATURE: CV Scoring */}
+                        {activeTab.id === 'cv-scoring' && (
                             <>
-                                <div className="flex flex-col md:flex-row items-center gap-8 mb-8 border-b border-border/50 pb-8">
-                                    <div className="relative">
-                                        {/* Score Circular Progress */}
+                                <div className="flex flex-col md:flex-row items-center gap-8 border-b border-border/50 pb-8">
+                                    <div className="relative shrink-0">
                                         <svg className="w-32 h-32 transform -rotate-90">
                                             <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted" />
                                             <circle 
-                                                cx="64" 
-                                                cy="64" 
-                                                r="56" 
-                                                stroke="currentColor" 
-                                                strokeWidth="12" 
-                                                fill="transparent" 
+                                                cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="12" fill="transparent" 
                                                 strokeDasharray={2 * Math.PI * 56} 
                                                 strokeDashoffset={2 * Math.PI * 56 * (1 - (result?.score || 0) / 100)} 
                                                 className={result?.score >= 80 ? 'text-[#10b981]' : result?.score >= 60 ? 'text-[#f59e0b]' : 'text-destructive'} 
-                                                strokeLinecap="round"
-                                                style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                                strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -292,51 +268,165 @@ export default function App() {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-bold mb-2 text-foreground">Resume Score Analysis</h3>
-                                        <p className="text-muted-foreground mb-4">{result?.summary}</p>
+                                        <p className="text-muted-foreground mb-4">{result?.summary || "Here is the ATS breakdown of your resume."}</p>
                                         <div className="flex gap-3 flex-wrap">
                                             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Parser Friendly</span>
                                             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">Keyword Optimized</span>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
-                                            <CheckCircle2 className="w-5 h-5 text-[#10b981]" /> Strengths
-                                        </h4>
+                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground"><CheckCircle2 className="w-5 h-5 text-[#10b981]" /> Strengths</h4>
                                         <ul className="space-y-2">
-                                            {result?.breakdown?.strengths?.map((str, i) => (
-                                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                                    <span className="text-[#10b981] mt-0.5">•</span> {str}
-                                                </li>
-                                            )) || <li className="text-sm text-muted-foreground italic">No specific strengths highlighted.</li>}
+                                            {result?.breakdown?.strengths?.map((str, i) => <li key={i} className="text-sm text-muted-foreground"> <span className="text-[#10b981] mr-1">•</span> {str}</li>) || <li className="text-sm italic">No specific strengths mapped.</li>}
                                         </ul>
                                     </div>
                                     <div className="bg-muted/30 rounded-xl p-5 border border-border/50">
-                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground">
-                                            <AlertCircle className="w-5 h-5 text-[#f59e0b]" /> Areas for Improvement
-                                        </h4>
+                                        <h4 className="flex items-center gap-2 font-bold mb-3 text-foreground"><AlertCircle className="w-5 h-5 text-[#f59e0b]" /> Areas for Improvement</h4>
                                         <ul className="space-y-2">
-                                            {result?.breakdown?.weaknesses?.map((weak, i) => (
-                                                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                                    <span className="text-[#f59e0b] mt-0.5">•</span> {weak}
-                                                </li>
-                                            )) || <li className="text-sm text-muted-foreground italic">No specific weaknesses found.</li>}
+                                            {result?.breakdown?.weaknesses?.map((weak, i) => <li key={i} className="text-sm text-muted-foreground"> <span className="text-[#f59e0b] mr-1">•</span> {weak}</li>) || <li className="text-sm italic">No specific gaps found.</li>}
                                         </ul>
                                     </div>
                                 </div>
                             </>
-                        ) : (
-                            <div className="mb-8 border-b border-border/50 pb-8 text-center">
-                                <FileText className="w-12 h-12 text-primary mx-auto mb-4" />
-                                <h3 className="text-2xl font-bold mb-2 text-foreground">{activeTab.name} Created Successfully</h3>
-                                <p className="text-muted-foreground">{result?.summary}</p>
+                        )}
+
+                        {/* FEATURE: AI Resume Builder */}
+                        {activeTab.id === 'resume-builder' && (
+                            <>
+                                <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                                   <div>
+                                     <h3 className="text-2xl font-bold text-foreground">Your Tailored Resume</h3>
+                                     <p className="text-muted-foreground text-sm mt-1">Ready for ATS parsing and professional applications.</p>
+                                   </div>
+                                   <div className="flex gap-2">
+                                     <button className="p-2 border border-border bg-card rounded-lg hover:bg-muted text-foreground transition-colors" title="Copy Text" onClick={() => navigator.clipboard.writeText(result?.tailored_resume || result?.recommendation || '')}><Copy className="w-4 h-4" /></button>
+                                     <button className="flex items-center gap-2 px-4 border border-primary bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-primary-foreground font-semibold text-sm transition-all"><Download className="w-4 h-4" /> PDF</button>
+                                   </div>
+                                </div>
+                                <div className="bg-muted/10 border border-border/50 rounded-lg p-6 max-h-[400px] overflow-y-auto custom-scrollbar font-mono text-sm text-foreground whitespace-pre-wrap">
+                                   {result?.tailored_resume || result?.recommendation || "Generated resume content goes here."}
+                                </div>
+                            </>
+                        )}
+
+                        {/* FEATURE: Skill Gap Roadmap (Upskill) */}
+                        {activeTab.id === 'upskill' && (
+                            <div className="flex flex-col gap-6">
+                                <div className="bg-card border border-border/50 rounded-xl p-6 shadow-sm">
+                                    <div className="flex justify-between items-end mb-4">
+                                        <div>
+                                            <h3 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+                                                <Target className="w-6 h-6 text-primary" /> Candidate Level
+                                            </h3>
+                                            <p className="text-sm text-muted-foreground mt-1">Based on JD compatibility</p>
+                                        </div>
+                                        <div className="text-3xl font-black text-primary">
+                                            {result?.match_percentage || 0}%
+                                        </div>
+                                    </div>
+                                    {/* Level Up Progress Bar */}
+                                    <div className="w-full h-4 bg-muted/50 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-gradient-to-r from-primary/70 to-primary transition-all duration-1000 ease-out"
+                                            style={{ width: `${result?.match_percentage || 0}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 className="font-bold flex items-center gap-2 mb-4 text-foreground text-lg">
+                                        <XCircle className="w-5 h-5 text-destructive" /> Critical Missing Skills
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {(result?.missing_skills || ['Loading...', 'Loading...', 'Loading...']).slice(0, 3).map((skill, i) => (
+                                            <div key={i} className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 flex flex-col items-center justify-center text-center shadow-sm">
+                                                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+                                                    <AlertCircle className="w-5 h-5 text-destructive" />
+                                                </div>
+                                                <span className="font-bold text-foreground">{skill}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 mt-2">
+                                    <h4 className="font-bold mb-2 flex items-center gap-2 text-primary">Next Steps Advice</h4>
+                                    <p className="text-muted-foreground text-sm leading-relaxed">
+                                        {result?.next_steps_advice || "Generating a career roadmap for you..."}
+                                    </p>
+                                </div>
                             </div>
                         )}
 
-                        {result?.recommendation && (
-                            <div className="mt-6 bg-primary/5 rounded-xl p-6 border border-primary/10">
+                        {/* FEATURE: Cover Letter Generator */}
+                        {activeTab.id === 'cover-letter' && (
+                            <>
+                                <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                                   <div>
+                                     <h3 className="text-2xl font-bold text-foreground">Tailored Cover Letter</h3>
+                                     <p className="text-muted-foreground text-sm mt-1">Generated specifically for your target role.</p>
+                                   </div>
+                                   <div className="flex gap-2">
+                                     <button className="p-2 border border-border bg-card rounded-lg hover:bg-muted text-foreground transition-colors" title="Copy Text" onClick={() => navigator.clipboard.writeText(result?.cover_letter || result?.recommendation || '')}><Copy className="w-4 h-4" /></button>
+                                     <button className="flex items-center gap-2 px-4 border border-primary bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-primary-foreground font-semibold text-sm transition-all"><Download className="w-4 h-4" /> Download</button>
+                                   </div>
+                                </div>
+                                <div className="bg-card border border-border/50 shadow-inner rounded-lg p-8 max-h-[500px] overflow-y-auto custom-scrollbar text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                                   {result?.cover_letter || result?.recommendation || "Generated cover letter output goes here."}
+                                </div>
+                            </>
+                        )}
+
+                        {/* FEATURE: Cold Email / DM Generator (Outreach) */}
+                        {activeTab.id === 'outreach' && (
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-foreground">Outreach Messages</h3>
+                                        <p className="text-muted-foreground text-sm mt-1">Ready to send to Hiring Managers.</p>
+                                    </div>
+                                    {/* Tone Toggle */}
+                                    <div className="flex bg-muted/50 p-1 rounded-lg border border-border/50">
+                                        <button 
+                                            onClick={() => setOutreachTone('professional')}
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${outreachTone === 'professional' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            Professional
+                                        </button>
+                                        <button 
+                                            onClick={() => setOutreachTone('creative')}
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${outreachTone === 'creative' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            Creative
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="relative group">
+                                    <div className="absolute right-4 top-4 z-10 transition-opacity">
+                                        <button 
+                                            className="p-2 bg-muted/80 backdrop-blur-sm border border-border rounded-lg hover:bg-muted text-foreground transition-all shadow-sm flex items-center gap-2 text-xs font-semibold" 
+                                            onClick={() => navigator.clipboard.writeText(
+                                                outreachTone === 'professional' ? (result?.professional_message || '') : (result?.creative_message || '')
+                                            )}
+                                        >
+                                            <Copy className="w-3.5 h-3.5" /> Copy
+                                        </button>
+                                    </div>
+                                    <div className="bg-card border border-border/50 shadow-inner rounded-xl p-8 min-h-[250px] font-medium text-foreground leading-relaxed whitespace-pre-wrap">
+                                        {outreachTone === 'professional' 
+                                            ? (result?.professional_message || "Generating a professional outreach message...") 
+                                            : (result?.creative_message || "Generating a creative outreach message...")}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* General AI Recommendation block for ATS/Job Matching */}
+                        {['cv-scoring', 'job-matching'].includes(activeTab.id) && result?.recommendation && (
+                            <div className="bg-primary/5 rounded-xl p-6 border border-primary/10 mt-2">
                                 <h4 className="font-bold mb-2 text-foreground block">AI Strategic Recommendations</h4>
                                 <div 
                                     className="prose prose-sm prose-gray dark:prose-invert max-w-none text-muted-foreground" 
@@ -359,17 +449,41 @@ export default function App() {
         </div>
       </div>
       
-      {/* Footer minimal representation */}
-      <footer className="bg-card border-t border-border text-muted-foreground py-12 px-6 mt-16 mt-auto">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between text-sm">
-            <p>© 2026 SkillSync AI. All rights reserved.</p>
-            <div className="flex gap-6 mt-4 md:mt-0 text-muted-foreground">
-                <a href="#" className="hover:text-foreground">Privacy Policy</a>
-                <a href="#" className="hover:text-foreground">Terms of Service</a>
-                <a href="#" className="hover:text-foreground">Cookie Policy</a>
+      {/* Footer */}
+      <footer className="bg-card border-t border-border py-10 px-6 mt-20 relative z-10 w-full flex-shrink-0">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-sm gap-4">
+            <p className="text-muted-foreground font-medium">developed by AADI</p>
+            <div className="flex gap-6 text-muted-foreground">
+                <button onClick={() => setModalContent('privacy')} className="hover:text-foreground transition-colors outline-none">Privacy Policy</button>
+                <button onClick={() => setModalContent('terms')} className="hover:text-foreground transition-colors outline-none">Terms of Service</button>
+                <button onClick={() => setModalContent('cookie')} className="hover:text-foreground transition-colors outline-none">Cookie Policy</button>
             </div>
           </div>
       </footer>
+
+      {/* Legal Modals Overlays */}
+      {modalContent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm shadow-2xl animate-in fade-in duration-200">
+           <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden relative shadow-xl">
+              <div className="flex items-center justify-between p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground">
+                  {modalContent === 'privacy' && 'Privacy Policy'}
+                  {modalContent === 'terms' && 'Terms of Service'}
+                  {modalContent === 'cookie' && 'Cookie Policy'}
+                </h2>
+                <button onClick={() => setModalContent(null)} className="p-2 hover:bg-muted text-muted-foreground hover:text-foreground rounded-full transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto text-sm text-muted-foreground space-y-4 custom-scrollbar">
+                  <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
+                  <p>This is a standard boilerplate text for the <strong>{modalContent}</strong> modal. It sits directly above the core SkillSync AI interface, ensuring users do not lose their current analysis progress.</p>
+                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                  <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                  <h3 className="font-bold text-foreground pt-4">Data Processing</h3>
+                  <p>Your resume data is processed entirely in memory. It is sent directly to the AI Analysis endpoint via the <code>/api/analyze</code> route to extract matching strengths, weaknesses, and ATS formatting markers. It is never permanently stored on our servers.</p>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
