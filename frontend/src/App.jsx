@@ -1,3 +1,5 @@
+// Author: Aadi (@Adiiii-i)
+// SkillSync AI - Core UI
 import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -40,8 +42,8 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [jobDescription, setJobDescription] = useState('');
-  const [modalContent, setModalContent] = useState(null); // 'privacy', 'terms', 'cookie', or null
-  const [outreachTone, setOutreachTone] = useState('professional'); // 'professional' or 'creative'
+  const [modalContent, setModalContent] = useState(null); // privacy, terms, etc
+  const [outreachTone, setOutreachTone] = useState('professional');
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => { e.preventDefault(); };
@@ -74,6 +76,8 @@ export default function App() {
     setError('');
     setResult(null);
 
+    console.log("firing analysis for:", activeTab.id);
+
     try {
       let data;
       switch (activeTab.id) {
@@ -97,7 +101,8 @@ export default function App() {
       }
       setResult(data);
     } catch (err) {
-      setError(`Analysis Failed: ${err.message || 'Server error'}. Please try again or check API logs.`);
+      console.error("Backend is acting up:", err);
+      setError(`Analysis Failed: ${err.message || 'Server exploded'}. Try again later.`);
     } finally {
       setLoading(false);
     }

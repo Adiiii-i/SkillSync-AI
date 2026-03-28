@@ -1,3 +1,5 @@
+// Author: Aadi (@Adiiii-i)
+// SkillSync AI - Radial Orbital Timeline component
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Link, Zap } from "lucide-react";
@@ -27,11 +29,11 @@ export default function RadialOrbitalTimeline({
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
     {}
   );
-  const [viewMode, setViewMode] = useState<"orbital">("orbital");
+  const [viewMode] = useState<"orbital">("orbital");
   const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [pulseEffect, setPulseEffect] = useState<Record<number, boolean>>({});
-  const [centerOffset, setCenterOffset] = useState<{ x: number; y: number }>({
+  const [centerOffset] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
   });
@@ -41,6 +43,7 @@ export default function RadialOrbitalTimeline({
   const nodeRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // click outside to reset everything
     if (e.target === containerRef.current || e.target === orbitRef.current) {
       setExpandedItems({});
       setActiveNodeId(null);
@@ -83,7 +86,7 @@ export default function RadialOrbitalTimeline({
   };
 
   useEffect(() => {
-    let rotationTimer: NodeJS.Timeout;
+    let rotationTimer: any; // using any to avoid NodeJS.Timeout mismatch in dev
 
     if (autoRotate && viewMode === "orbital") {
       rotationTimer = setInterval(() => {
@@ -194,7 +197,7 @@ export default function RadialOrbitalTimeline({
             return (
               <div
                 key={item.id}
-                ref={(el) => (nodeRefs.current[item.id] = el)}
+                ref={(el) => { nodeRefs.current[item.id] = el; }}
                 className="absolute transition-all duration-700 cursor-pointer"
                 style={nodeStyle}
                 onClick={(e) => {

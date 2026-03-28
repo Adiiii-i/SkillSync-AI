@@ -1,10 +1,10 @@
+// Author: Aadi (@Adiiii-i)
+// SkillSync AI - Orbital Navigation
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart2, 
   Briefcase, 
-  Globe, 
   FileText, 
-  CircleDollarSign,
   Zap,
   Link,
   ArrowRight,
@@ -97,6 +97,7 @@ const features: Feature[] = [
 ];
 
 export default function FeatureNavigation({ activeId, onActionSelect }: FeatureNavProps) {
+  // basic rotation state for the orbital ring
   const [rotationAngle, setRotationAngle] = useState<number>(0);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
