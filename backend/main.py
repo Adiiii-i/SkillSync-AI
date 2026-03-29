@@ -90,7 +90,7 @@ async def tailor_cv(
     try:
         pdf_bytes = await resume.read()
         resume_text = extract_text_from_pdf(pdf_bytes)
-        tailored_markdown = tailor_resume_with_groq(resume_text, job_description)
+        tailored_markdown = await tailor_resume_with_groq(resume_text, job_description)
         return {"tailored_resume": tailored_markdown}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -103,7 +103,7 @@ async def cover_letter(
     try:
         pdf_bytes = await resume.read()
         resume_text = extract_text_from_pdf(pdf_bytes)
-        cl_markdown = generate_cover_letter_with_groq(resume_text, job_description)
+        cl_markdown = await generate_cover_letter_with_groq(resume_text, job_description)
         return {"cover_letter": cl_markdown}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

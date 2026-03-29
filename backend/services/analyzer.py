@@ -18,9 +18,9 @@ async def screen_resume(resume_bytes: bytes, job_description: str) -> ScreeningR
     logger.info("Starting PDF parsing...")
     resume_text = extract_text_from_pdf(resume_bytes)
 
-    # 2. Analyze with Groq (Llama-3.3-70B)
+    # 2. Analyze with Groq (Llama-3.3-70B - now using Gemma-2-2b-it with retries)
     logger.info("Starting Groq analysis...")
-    ai_result = analyze_with_groq(resume_text, job_description)
+    ai_result = await analyze_with_groq(resume_text, job_description)
     logger.info(f"AI RAW RESULT: {ai_result}")
 
     # 3. Validate structure with Pydantic

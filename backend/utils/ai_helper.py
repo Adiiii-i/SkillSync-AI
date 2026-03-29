@@ -1,8 +1,11 @@
 import os
 import json
 import logging
+import re
+import asyncio
 from openai import OpenAI
 from dotenv import load_dotenv
+from functools import partial
 
 # Load env vars
 load_dotenv()
@@ -12,12 +15,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 NV_KEY = os.getenv("NVIDIA_API_KEY", "")
+MAX_RESUME_CHARS = 3000  # e2b safe limit
 
-def call_ai_with_retry(prompt, model="google/gemma-2-2b-it"):
+def truncate_resume(text: str) -> str:
+    """The e2b (2 billion parameter) model has a small context window.
+    Truncate before sending to API."""
+    if not text:
+        return ""
+    if len(text) <= MAX_RESUME_CHARS:
+        return text
+    
+    logger.warning("Resume truncated for e2b model context limit")
+    return text[:MAX_RESUME_CHARS] + "\n[Resume truncated for analysis]"
+
+async def call_ai_with_retry(prompt, model="google/gemma-2-2b-it"):
     """
-    Calls the NVIDIA API (OpenAI Compatible) with the selected Gemma model.
-    Note: response_format is NOT supported by NVIDIA NIM for this model.
-    We rely on prompt engineering for JSON output.
+    Asynchronously calls NVIDIA API with strict settings.
     """
     if not NV_KEY:
         raise ValueError("NVIDIA_API_KEY is not set.")
@@ -28,134 +41,220 @@ def call_ai_with_retry(prompt, model="google/gemma-2-2b-it"):
             api_key=NV_KEY
         )
         
-        res = client.chat.completions.create(
+        # Strict settings for JSON output
+        func = partial(client.chat.completions.create,
             model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
-            top_p=0.7,
-            max_tokens=4096,
+            temperature=0.1,      
+            top_p=0.1,          
+            max_tokens=2048,    
         )
-        return res.choices[0].message.content
+        
+        loop = asyncio.get_event_loop()
+        res = await loop.run_in_executor(None, func)
+        
+        raw_text = res.choices[0].message.content or ""
+        return raw_text
+        
     except Exception as e:
         logger.error(f"NVIDIA API Error: {str(e)}")
         raise e
 
-def _clean_json_response(content: str) -> str:
-    """Strip markdown code fences from AI responses."""
-    if not content:
-        return content
-    content = content.strip()
-    if content.startswith("```json"):
-        content = content[7:]
-    elif content.startswith("```"):
-        content = content[3:]
-    if content.endswith("```"):
-        content = content[:-3]
-    return content.strip()
+def safe_parse_gemma_json(raw_text: str):
+    """
+    Advanced Gemma JSON sanitizer: strips markdown fences, conversational
+    preamble/postamble, and fixes common edge case formatting.
+    """
+    try:
+        cleaned = raw_text.strip() if raw_text else ""
+        
+        # Log for debugging
+        logger.info(f"DEBUG: Raw Gemma Response Header: {cleaned[:100]}...")
 
-def analyze_with_groq(resume_text: str, job_description: str):
-    """Main analysis — returns structured JSON for the ATS scoring dashboard."""
-    prompt = f"""You are an expert HR Manager and ATS specialist. Analyze this resume against the job description.
+        # Step 1: Remove ALL markdown code fences
+        cleaned = re.sub(r'```json\s*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r'```\s*', '', cleaned, flags=re.IGNORECASE)
+        cleaned = cleaned.strip()
 
-JOB DESCRIPTION: {job_description}
+        # Step 2: Remove conversational preamble
+        preambles = [
+            r'^sure[!,.]?\s*',
+            r'^here is.*?:\s*',
+            r'^here\'s.*?:\s*',
+            r'^certainly[!,.]?\s*',
+            r'^of course[!,.]?\s*',
+            r'^absolutely[!,.]?\s*'
+        ]
+        for pattern in preambles:
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
 
-RESUME: {resume_text}
+        # Step 3: Remove postamble
+        postambles = [
+            r'i hope this helps[!.]?\s*$',
+            r'let me know if you need.*$',
+            r'feel free to ask.*$',
+            r'please let me know.*$'
+        ]
+        for pattern in postambles:
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
 
-You MUST return ONLY a valid JSON object (no markdown, no explanation) with exactly this structure:
+        # Step 4: Extract the JSON object (grab from first { to last })
+        first_brace = cleaned.find('{')
+        last_brace = cleaned.rfind('}')
+
+        if first_brace == -1 or last_brace == -1:
+            raise ValueError("No JSON object found in response.")
+
+        cleaned = cleaned[first_brace : last_brace + 1]
+
+        # Step 5: Fix common Gemma JSON formatting issues (trailing commas)
+        cleaned = re.sub(r',\s*([}\]])', r'\1', cleaned)
+
+        # Step 6: Parse
+        parsed = json.loads(cleaned)
+        
+        # Step 7: Standardize Score to integer
+        score = parsed.get("score") or parsed.get("atsScore") or 50
+        parsed["score"] = int(round(float(score)))
+        
+        return {"success": True, "data": parsed}
+
+    except Exception as e:
+        logger.error(f"Gemma JSON Parse Error: {str(e)}")
+        return {"success": False, "data": None}
+
+async def analyze_with_retry(resume_text: str, job_description: str, max_attempts=3):
+    """Retries the analysis up to 3 times if JSON parsing fails."""
+    
+    # 1. Truncate resume for e2b context limit
+    safe_resume = truncate_resume(resume_text)
+    
+    # 2. Build the forceful prompt
+    prompt = f"""You are an ATS resume scoring system. Your ONLY job is to output a single valid JSON object. 
+
+STRICT RULES — VIOLATING THESE WILL BREAK THE SYSTEM:
+- Output ONLY the JSON object
+- Do NOT write anything before the opening {{
+- Do NOT write anything after the closing }}
+- Do NOT use markdown code fences
+- Do NOT say "Sure", "Here is", or "I hope this helps"
+- Do NOT add trailing commas
+- COMPLETELY finish the JSON
+
+EXAMPLE OF CORRECT OUTPUT:
 {{
-  "score": <integer 0-100>,
+  "score": 78,
+  "summary": "Strong technical background in React and Python.",
   "breakdown": {{
-    "technical_skills": <integer 0-100>,
-    "experience": <integer 0-100>,
-    "domain_knowledge": <integer 0-100>,
-    "education": <integer 0-100>,
-    "strengths": ["strength 1", "strength 2", "strength 3"],
-    "weaknesses": ["weakness 1", "weakness 2"]
+    "technical_skills": 85,
+    "experience": 75,
+    "domain_knowledge": 80,
+    "education": 90,
+    "strengths": ["React expert", "Python automation"],
+    "weaknesses": ["Lacks Docker experience"]
   }},
-  "summary": "A 2-3 sentence summary of the candidate's fit",
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "gaps": ["gap 1", "gap 2"],
-  "recommendation": "A paragraph of strategic recommendations for the candidate",
-  "match_percentage": <integer 0-100, optional, based on job compatibility>,
-  "missing_skills": ["skill 1", "skill 2", "skill 3", optional critical skills they lack from JD],
-  "next_steps_advice": "1 or 2 sentences of actionable steps to bridge the gap",
-  "professional_message": "Draft a short, professional cold email (e.g., to a recruiter)",
-  "creative_message": "Draft a punchy, creative cold DM (e.g., for LinkedIn/Twitter)"
+  "strengths": ["React", "Python"],
+  "gaps": ["Docker"],
+  "recommendation": "Learn Docker and CI/CD pipelines.",
+  "match_percentage": 78,
+  "missing_skills": ["Docker", "Kubernetes"],
+  "next_steps_advice": "Follow the Skill Gap roadmap.",
+  "professional_message": "Draft email here...",
+  "creative_message": "Punchy DM here..."
 }}
 
-RESPOND WITH ONLY THE JSON. NO other text."""
+Now analyze this resume and return ONLY the JSON:
+
+RESUME:
+{safe_resume}
+
+JOB DESCRIPTION:
+{job_description if job_description else "General professional profile analysis."}
+
+OUTPUT ONLY THE JSON OBJECT. START WITH {{ AND END WITH }}"""
     
+    for attempt in range(1, max_attempts + 1):
+        logger.info(f"Attempt {attempt}/{max_attempts} for AI Analysis...")
+        try:
+            raw_text = await call_ai_with_retry(prompt)
+            result = safe_parse_gemma_json(raw_text)
+            
+            if result["success"]:
+                logger.info(f"✅ Analysis succeeded on attempt {attempt}")
+                return result["data"]
+            
+            logger.warning(f"❌ Attempt {attempt} failed - cleaning failed or invalid JSON.")
+        except Exception as e:
+            logger.error(f"Attempt {attempt} error: {str(e)}")
+            
+        if attempt < max_attempts:
+            await asyncio.sleep(1.5)
+            
+    raise Exception("Analysis failed after 3 attempts due to persistent malformed AI output.")
+
+async def analyze_with_groq(resume_text: str, job_description: str):
+    """Async main analysis — uses retry logic."""
     try:
-        content = call_ai_with_retry(prompt)
-        content = _clean_json_response(content)
-        result = json.loads(content)
-        
-        # Ensure breakdown has strengths/weaknesses for the frontend
-        if "breakdown" in result and isinstance(result["breakdown"], dict):
-            if "strengths" not in result["breakdown"]:
-                result["breakdown"]["strengths"] = result.get("strengths", [])
-            if "weaknesses" not in result["breakdown"]:
-                result["breakdown"]["weaknesses"] = result.get("gaps", [])
-        
-        return result
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON parse failed. Raw content: {content[:500]}")
-        # Return a safe fallback so the UI doesn't crash
+        return await analyze_with_retry(resume_text, job_description)
+    except Exception as e:
+        logger.error(f"All retry attempts failed: {str(e)}")
+        # Ultimate fallback
         return {
             "score": 65,
             "breakdown": {
-                "technical_skills": 60,
-                "experience": 70,
-                "domain_knowledge": 65,
-                "education": 65,
+                "technical_skills": 60, "experience": 70, "domain_knowledge": 65, "education": 65,
                 "strengths": ["Resume uploaded successfully"],
-                "weaknesses": ["AI response was malformed — please try again"]
+                "weaknesses": ["Gemma returned malformed response after 3 retries"]
             },
-            "summary": "The AI model returned an improperly formatted response. The analysis could not be completed. Please try again.",
+            "summary": "The AI model (Gemma) is currently returning improperly formatted data. Please try again in a few moments.",
             "strengths": ["Resume uploaded successfully"],
-            "gaps": ["AI response was malformed — please retry"],
-            "recommendation": "Please click Analyze again. The AI model occasionally returns incomplete responses on the first attempt."
+            "gaps": ["AI response malformed — retry limit reached"],
+            "recommendation": "Click 'Analyze Resume' one more time; these issues usually resolve on a fresh attempt."
         }
-    except Exception as e:
-        logger.error(f"AI Suite Failed: {str(e)}")
-        raise e
 
-def get_premium_suite(resume_text: str, job_description: str):
-    """Premium CV + Cover Letter generation."""
-    prompt = f"""You are a professional career coach and resume writer.
+async def get_premium_suite(resume_text: str, job_description: str):
+    """Async Premium CV + Cover Letter generation."""
+    raw_text = ""
+    try:
+        # 1. Truncate inputs
+        safe_resume = truncate_resume(resume_text)
+        
+        prompt = f"""You are a career coach. Generate a tailored resume and cover letter.
+Return ONLY a valid JSON object.
 
-JOB DESCRIPTION: {job_description}
+RESUME:
+{safe_resume}
 
-RESUME: {resume_text}
+JOB DESCRIPTION:
+{job_description}
 
-Generate BOTH a tailored resume and a cover letter. Return ONLY a valid JSON object (no markdown fences, no explanation) with this structure:
+JSON STRUCTURE:
 {{
   "tailored_resume": "The complete tailored resume in markdown format",
   "cover_letter": "The complete cover letter in markdown format"
-}}
+}}"""
 
-RESPOND WITH ONLY THE JSON. NO other text."""
+        raw_text = await call_ai_with_retry(prompt)
+        
+        # Use our safe parser for the premium suite as well
+        result = safe_parse_gemma_json(raw_text)
+        
+        if result["success"]:
+            return result["data"]
+        
+        raise ValueError("AI JSON parsing failed.")
 
-    try:
-        content = call_ai_with_retry(prompt)
-        content = _clean_json_response(content)
-        
-        if not content:
-            raise ValueError("AI API returned empty response.")
-        
-        return json.loads(content)
-    except json.JSONDecodeError:
-        logger.error(f"Premium suite JSON parse failed. Raw: {content[:500] if content else 'empty'}")
-        # Graceful fallback: return the raw text as markdown
+    except Exception as e:
+        logger.error(f"Premium suite failed: {str(e)}")
         return {
-            "tailored_resume": content or "AI response was not properly formatted. Please try again.",
+            "tailored_resume": raw_text if raw_text else "AI response was not properly formatted. Please try again.",
             "cover_letter": "Could not generate cover letter. Please try again."
         }
-    except Exception as e:
-        raise e
 
-def tailor_resume_with_groq(resume_text: str, job_description: str):
-    return get_premium_suite(resume_text, job_description).get("tailored_resume", "")
+async def tailor_resume_with_groq(resume_text: str, job_description: str):
+    data = await get_premium_suite(resume_text, job_description)
+    return data.get("tailored_resume", "")
 
-def generate_cover_letter_with_groq(resume_text: str, job_description: str):
-    return get_premium_suite(resume_text, job_description).get("cover_letter", "")
+async def generate_cover_letter_with_groq(resume_text: str, job_description: str):
+    data = await get_premium_suite(resume_text, job_description)
+    return data.get("cover_letter", "")

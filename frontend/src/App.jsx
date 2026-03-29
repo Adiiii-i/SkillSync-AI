@@ -8,7 +8,7 @@ import {
   UploadCloud, Play, BarChart2, Briefcase, FileText,
   File as FileIcon, CheckCircle2,
   XCircle, AlertCircle, Loader2, Download, Copy, X,
-  Target, Send, Globe, Printer
+  Target, Send, Globe, Printer, RotateCcw
 } from 'lucide-react';
 import FeatureNavigation from './components/blocks/feature-nav';
 import { DotLoader } from './components/ui/dot-loader';
@@ -277,7 +277,25 @@ export default function App() {
             </div>
 
             <div className="mt-auto">
-              {error && <p className="text-destructive text-sm mb-3 font-medium bg-destructive/10 p-3 rounded-md border border-destructive/20">{error}</p>}
+              {error && (
+                <div className="bg-destructive/10 p-4 rounded-xl border border-destructive/20 mb-6 group animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-destructive text-sm font-bold mb-1">Analysis Failed</p>
+                      <p className="text-destructive/80 text-[11px] mb-3 leading-relaxed">{error}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleAnalyze} 
+                        className="h-8 border-destructive/30 text-destructive hover:bg-destructive hover:text-white transition-all bg-transparent"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 mr-2" /> Retry Analysis
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
               <button 
                 onClick={handleAnalyze}
                 disabled={loading}
