@@ -11,6 +11,7 @@ import {
   Target, Send, Globe
 } from 'lucide-react';
 import FeatureNavigation from './components/blocks/feature-nav';
+import { DotLoader } from './components/ui/dot-loader';
 import { 
   analyzeAtsScore, buildTailoredResume,
   generateCoverLetter, generateSkillGap, generateOutreach 
@@ -33,6 +34,25 @@ const TABS = [
   { id: 'upskill', name: 'Skill Gap Roadmap', desc: 'Identify exactly what skills you are missing for this role', icon: Target, prompt: 'Compare this resume against the job description to find missing skills and provide a roadmap.' },
   { id: 'cover-letter', name: 'Cover Letter Generator', desc: 'Generate a perfect cover letter in seconds', icon: FileText, prompt: 'Write a highly professional and compelling cover letter based precisely on my resume experience.' },
   { id: 'outreach', name: 'Outreach Generator', desc: 'Craft professional cold emails & DMs', icon: Send, prompt: 'Write a short, punchy cold outreach message targeting this exact role in both professional and creative tones.' },
+];
+
+const GAME_FRAMES = [
+    [14, 7, 0, 8, 6, 13, 20],
+    [14, 7, 13, 20, 16, 27, 21],
+    [14, 20, 27, 21, 34, 24, 28],
+    [27, 21, 34, 28, 41, 32, 35],
+    [34, 28, 41, 35, 48, 40, 42],
+    [34, 28, 41, 35, 48, 42, 46],
+    [34, 28, 41, 35, 48, 42, 38],
+    [34, 28, 41, 35, 48, 30, 21],
+    [34, 28, 41, 48, 21, 22, 14],
+    [34, 28, 41, 21, 14, 16, 27],
+    [34, 28, 21, 14, 10, 20, 27],
+    [28, 21, 14, 4, 13, 20, 27],
+    [28, 21, 14, 12, 6, 13, 20],
+    [28, 21, 14, 6, 13, 20, 11],
+    [28, 21, 14, 6, 13, 20, 10],
+    [14, 6, 13, 20, 9, 7, 21],
 ];
 
 export default function App() {
@@ -234,11 +254,12 @@ export default function App() {
           <div className="lg:col-span-8 flex flex-col h-full min-h-[500px]">
             {loading ? (
               <div className="flex-1 border-2 border-dashed border-border/60 rounded-2xl flex flex-col items-center justify-center bg-muted/20 p-12">
-                 <div className="relative w-24 h-24 mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent flex items-center justify-center">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                    </div>
+                 <div className="mb-6">
+                    <DotLoader 
+                      frames={GAME_FRAMES} 
+                      duration={120} 
+                      className="dot-loader-grid"
+                    />
                 </div>
                 <h3 className="text-xl font-bold text-card-foreground mb-2">Analyzing Profile...</h3>
                 <p className="text-muted-foreground text-center max-w-sm">Our AI is processing your request. Please wait a moment while we map millions of data points.</p>

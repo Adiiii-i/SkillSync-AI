@@ -112,6 +112,12 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
 }
 
+.dot-loader-grid div.active {
+    background-color: var(--primary) !important;
+    box-shadow: 0 0 10px var(--primary);
+    opacity: 1;
+}
+
 @layer base {
   * {
     @apply border-border;

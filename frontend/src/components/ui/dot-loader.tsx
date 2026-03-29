@@ -1,4 +1,5 @@
 "use client";
+
 import { ComponentProps, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export const DotLoader = ({
     const gridRef = useRef<HTMLDivElement>(null);
     const currentIndex = useRef(0);
     const repeats = useRef(0);
-    const interval = useRef<NodeJS.Timeout>(null);
+    const interval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const applyFrameToDots = useCallback(
         (dots: HTMLDivElement[], frameIndex: number) => {
@@ -51,11 +52,13 @@ export const DotLoader = ({
             const dotElements = gridRef.current?.children;
             if (!dotElements) return;
             const dots = Array.from(dotElements) as HTMLDivElement[];
+            
+            // @ts-ignore - interval.current typing can be tricky between node and web
             interval.current = setInterval(() => {
                 applyFrameToDots(dots, currentIndex.current);
                 if (currentIndex.current + 1 >= frames.length) {
-                    if (repeatCount != -1 && repeats.current + 1 >= repeatCount) {
-                        clearInterval(interval.current!);
+                    if (repeatCount !== -1 && repeats.current + 1 >= repeatCount) {
+                        if (interval.current) clearInterval(interval.current);
                         onComplete?.();
                     }
                     repeats.current++;
@@ -74,7 +77,7 @@ export const DotLoader = ({
     return (
         <div {...props} ref={gridRef} className={cn("grid w-fit grid-cols-7 gap-0.5", className)}>
             {Array.from({ length: 49 }).map((_, i) => (
-                <div key={i} className={cn("h-1.5 w-1.5 rounded-sm", dotClassName)} />
+                <div key={i} className={cn("h-1.5 w-1.5 rounded-sm bg-muted-foreground/20 transition-colors duration-200", dotClassName)} />
             ))}
         </div>
     );
