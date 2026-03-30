@@ -40,38 +40,38 @@
   }
 
   .dark {
-    --card: #ede1cd;
-    --ring: #102C26;
+    --card: #dfd4c1;
+    --ring: #452829;
     --input: #F7E7CE;
-    --muted: #e8dbc4;
-    --accent: #e2d3bb;
-    --border: #dfcfb5;
+    --muted: #dfd4c1;
+    --accent: #d2c8b7;
+    --border: #452829;
     --radius: 0.5rem;
-    --chart-1: #102C26;
-    --chart-2: #1e4d45;
+    --chart-1: #452829;
+    --chart-2: #5c3537;
     --chart-3: #F7E7CE;
-    --chart-4: #102C26;
-    --chart-5: #102C26;
-    --popover: #ede1cd;
-    --primary: #102C26;
+    --chart-4: #452829;
+    --chart-5: #452829;
+    --popover: #dfd4c1;
+    --primary: #452829;
     --sidebar: #F7E7CE;
-    --secondary: #1e4d45;
+    --secondary: #5c3537;
     --background: #F7E7CE;
-    --foreground: #102C26;
+    --foreground: #452829;
     --destructive: #e54d2e;
-    --sidebar-ring: #102C26;
-    --sidebar-accent: #ede1cd;
-    --sidebar-border: #ede1cd;
-    --card-foreground: #102C26;
-    --sidebar-primary: #102C26;
-    --muted-foreground: #102C26;
-    --accent-foreground: #102C26;
-    --popover-foreground: #102C26;
+    --sidebar-ring: #452829;
+    --sidebar-accent: #dfd4c1;
+    --sidebar-border: #dfd4c1;
+    --card-foreground: #452829;
+    --sidebar-primary: #452829;
+    --muted-foreground: #452829;
+    --accent-foreground: #452829;
+    --popover-foreground: #452829;
     --primary-foreground: #F7E7CE;
-    --sidebar-foreground: #102C26;
-    --secondary-foreground: #102C26;
+    --sidebar-foreground: #452829;
+    --secondary-foreground: #452829;
     --destructive-foreground: #ffffff;
-    --sidebar-accent-foreground: #102C26;
+    --sidebar-accent-foreground: #452829;
     --sidebar-primary-foreground: #F7E7CE;
   }
 }
@@ -140,28 +140,28 @@
   --bg-surface: #ede1cd;
   --bg-elevated: #e2d3bb;
 
-  --neon-emerald: #102C26;
-  --neon-emerald-dim: #102C26;
-  --neon-emerald-glow: rgba(16, 44, 38, 0.1);
-  --neon-emerald-glow-strong: rgba(16, 44, 38, 0.2);
+  --neon-emerald: #452829;
+  --neon-emerald-dim: #452829;
+  --neon-emerald-glow: rgba(69, 40, 41, 0.1);
+  --neon-emerald-glow-strong: rgba(69, 40, 41, 0.2);
 
-  --violet: #102C26;
-  --violet-dim: #102C26;
-  --violet-glow: rgba(16, 44, 38, 0.1);
+  --violet: #452829;
+  --violet-dim: #452829;
+  --violet-glow: rgba(69, 40, 41, 0.1);
 
-  --text-white: #102C26;
-  --text-secondary: #102C26;
-  --text-muted: #102C26;
-  --text-dim: #102C26;
+  --text-white: #452829;
+  --text-secondary: #452829;
+  --text-muted: #452829;
+  --text-dim: #452829;
 
-  --border-glass: 1px solid rgba(16, 44, 38, 0.1);
-  --border-glass-hover: 1px solid rgba(16, 44, 38, 0.2);
-  --border-neon: 1px solid rgba(16, 44, 38, 0.2);
-  --border-dashed-neon: 2px dashed rgba(16, 44, 38, 0.2);
+  --border-glass: 1px solid rgba(69, 40, 41, 0.1);
+  --border-glass-hover: 1px solid rgba(69, 40, 41, 0.2);
+  --border-neon: 1px solid rgba(69, 40, 41, 0.2);
+  --border-dashed-neon: 2px dashed rgba(69, 40, 41, 0.2);
 
-  --shadow-neon: 0 0 30px rgba(16, 44, 38, 0.05);
-  --shadow-neon-strong: 0 0 60px rgba(16, 44, 38, 0.1);
-  --shadow-violet: 0 0 40px rgba(16, 44, 38, 0.1);
+  --shadow-neon: 0 0 30px rgba(69, 40, 41, 0.05);
+  --shadow-neon-strong: 0 0 60px rgba(69, 40, 41, 0.1);
+  --shadow-violet: 0 0 40px rgba(69, 40, 41, 0.1);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1);
   --shadow-card-hover: 0 20px 60px rgba(0, 0, 0, 0.15);
 
