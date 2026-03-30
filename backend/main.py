@@ -18,7 +18,7 @@ from utils.parser import extract_text_from_pdf
 
 load_dotenv()
 
-app = FastAPI(title="SkillSync AI", version="1.0.0")
+app = FastAPI(title="Skillify", version="1.0.0")
 
 # --- CORS ---
 # --- CORS ---
@@ -47,7 +47,7 @@ app.add_middleware(
 
 @app.get("/")
 def health_check():
-    return {"status": "ok", "service": "SkillSync AI"}
+    return {"status": "ok", "service": "Skillify"}
 
 @app.post("/api/analyze", response_model=ScreeningResult)
 async def analyze_resume(

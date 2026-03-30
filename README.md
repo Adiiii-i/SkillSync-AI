@@ -1,9 +1,9 @@
-# SkillSync AI 🚀
+# Skillify 🚀
 ### Next-Gen AI Resume Screening & Tailoring Platform
 
-SkillSync AI is a premium, high-fidelity SaaS platform engineered to transform the hiring process. Built with a **cinematic obsidian aesthetic** and powered by **LLama 3.3 (Groq)**, it performs 16 critical analyses to ensure resumes cut through the ATS noise and convert into interview callbacks.
+Skillify is a premium, high-fidelity SaaS platform engineered to transform the hiring process. Built with a **cinematic obsidian aesthetic** and powered by **LLama 3.3 (Groq)**, it performs 16 critical analyses to ensure resumes cut through the ATS noise and convert into interview callbacks.
 
-![SkillSync AI Banner](https://img.shields.io/badge/Aesthetic-Cinematic_Dark-00FFB2?style=for-the-badge)
+![Skillify Banner](https://img.shields.io/badge/Aesthetic-Cinematic_Dark-00FFB2?style=for-the-badge)
 ![Tech Stack](https://img.shields.io/badge/Stack-React_|_FastAPI_|_Groq-7C3AED?style=for-the-badge)
 
 ---
@@ -79,4 +79,4 @@ npm run dev
 - Payment UPI: `7080359767@fam`
 
 ---
-*SkillSync AI — Converting Resumes into Realistic Interviews.*
+*Skillify — Converting Resumes into Realistic Interviews.*

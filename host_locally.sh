@@ -1,5 +1,5 @@
 #!/bin/bash
-# SkillSync AI - Local Hosting Script
+# Skillify - Local Hosting Script
 
 # 1. Kill any existing instances on common ports
 echo "🛑 Clearing existing Dev ports..."
@@ -21,7 +21,7 @@ cd "../frontend"
 npm run dev -- --port 5173 &
 FRONTEND_PID=$!
 
-echo "✨ SkillSync AI is now booting up!"
+echo "✨ Skillify is now booting up!"
 echo "-----------------------------------"
 echo "Frontend: http://localhost:5173"
 echo "Backend:  http://localhost:8000 (API Health: http://localhost:8000/)"

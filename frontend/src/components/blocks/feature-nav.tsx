@@ -1,5 +1,5 @@
 // Author: Aadi (@Adiiii-i)
-// SkillSync AI - Orbital Navigation
+// Skillify - Orbital Navigation
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart2, 

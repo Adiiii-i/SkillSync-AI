@@ -1,5 +1,5 @@
 // Author: Aadi (@Adiiii-i)
-// SkillSync AI - Core UI
+// Skillify - Core UI
 import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -181,7 +181,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
               <div className="w-4 h-4 bg-primary-foreground rotate-45" />
             </div>
-            <span className="font-bold text-xl tracking-tight">SkillSync AI</span>
+            <span className="font-bold text-xl tracking-tight">Skillify</span>
           </div>
 
           <nav className="flex items-center gap-4 lg:gap-8 text-sm font-medium text-muted-foreground overflow-x-auto whitespace-nowrap custom-scrollbar pb-2 pt-2 md:pb-0 md:pt-0 max-w-full">
@@ -625,7 +625,7 @@ export default function App() {
               </div>
               <div className="p-6 overflow-y-auto text-sm text-muted-foreground space-y-4 custom-scrollbar">
                   <p><strong>Last Updated: {new Date().toLocaleDateString()}</strong></p>
-                  <p>This is a standard boilerplate text for the <strong>{modalContent}</strong> modal. It sits directly above the core SkillSync AI interface, ensuring users do not lose their current analysis progress.</p>
+                  <p>This is a standard boilerplate text for the <strong>{modalContent}</strong> modal. It sits directly above the core Skillify interface, ensuring users do not lose their current analysis progress.</p>
                   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
                   <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
                   <h3 className="font-bold text-foreground pt-4">Data Processing</h3>

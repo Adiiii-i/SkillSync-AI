@@ -1,5 +1,5 @@
 // Author: Aadi (@Adiiii-i)
-// SkillSync AI - Backend Communication Service
+// Skillify - Backend Communication Service
 
 // Define the base URL for the backend.
 // In development, this points to your local server. In production, it can use an env variable.

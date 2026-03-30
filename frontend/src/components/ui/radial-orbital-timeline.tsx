@@ -1,5 +1,5 @@
 // Author: Aadi (@Adiiii-i)
-// SkillSync AI - Radial Orbital Timeline component
+// Skillify - Radial Orbital Timeline component
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Link, Zap } from "lucide-react";
