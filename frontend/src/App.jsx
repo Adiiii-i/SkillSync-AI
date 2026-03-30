@@ -173,13 +173,14 @@ export default function App() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30 relative overflow-hidden">
-      {/* Subtle Background Entropy Effect - Only on main page background */}
-      <div className="absolute top-0 left-0 w-full h-[750px] pointer-events-none opacity-[0.38] flex items-center justify-center -z-10 translate-y-[-120px]">
-         <Entropy size={1300} color="#191970" />
+    <div className="dark min-h-screen bg-[#ECEFF1] font-sans text-foreground pb-20 selection:bg-primary/30 relative overflow-x-hidden">
+      {/* Absolute Background Entropy Layer */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.45] z-0 flex items-center justify-center overflow-hidden">
+         <Entropy size={1400} color="#191970" className="blur-[1px]" />
       </div>
-      {/* Header */}
-      <header className="bg-card text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">
+      
+      {/* Header (ensure it has a solid background to cover the entropy) */}
+      <header className="bg-[#ECEFF1]/90 backdrop-blur-md text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">
         <div className="max-w-7xl mx-auto flex items-center justify-between min-w-max gap-8 px-4">
           <div className="flex items-center gap-4 select-none">
             {/* Bold Premium Icon */}
