@@ -27,6 +27,7 @@ ALLOWED_ORIGINS = [
     "http://localhost:5174", 
     "http://localhost:3000",
     "https://skill-sync-ai-nine.vercel.app",
+    "https://skillify.isroot.in",
 ]
 
 frontend_url = os.getenv("FRONTEND_URL")
