@@ -176,12 +176,12 @@ export default function App() {
       {/* Header */}
       <header className="bg-card text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">
         <div className="max-w-7xl mx-auto flex items-center justify-between min-w-max gap-8 px-4">
-          <div className="flex items-center gap-3 select-none">
-            {/* Premium S-Mark Logo Icon */}
-            <div className="w-10 h-10 flex items-center justify-center">
-              <img src="/assets/premium-logo.png" alt="Skillify Icon" className="h-[48px] w-auto object-contain" />
+          <div className="flex items-center gap-4 select-none">
+            {/* Bold Premium Icon */}
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/assets/premium-logo.png" alt="SKILLIFY Icon" className="h-[52px] w-auto object-contain" />
             </div>
-            <span className="font-display font-bold text-2xl tracking-tight text-primary">Skillify</span>
+            <span className="font-display font-bold text-2xl tracking-widest text-[#191970] uppercase">SKILLIFY</span>
           </div>
 
           <nav className="flex items-center gap-4 lg:gap-8 text-sm font-medium text-muted-foreground overflow-x-auto whitespace-nowrap custom-scrollbar pb-2 pt-2 md:pb-0 md:pt-0 max-w-full">
