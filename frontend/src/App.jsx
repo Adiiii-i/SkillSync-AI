@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import FeatureNavigation from './components/blocks/feature-nav';
 import { DotLoader } from './components/ui/dot-loader';
+import { Entropy } from './components/ui/entropy';
 import { Button } from './components/ui/button';
 import ResumePreview from './components/ResumePreview';
 import CoverLetterPreview from './components/CoverLetterPreview';
@@ -172,7 +173,11 @@ export default function App() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30">
+    <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30 relative overflow-hidden">
+      {/* Subtle Background Entropy Effect - Only on main page background */}
+      <div className="absolute top-0 left-0 w-full h-[750px] pointer-events-none opacity-[0.38] flex items-center justify-center -z-10 translate-y-[-120px]">
+         <Entropy size={1300} color="#191970" />
+      </div>
       {/* Header */}
       <header className="bg-card text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">
         <div className="max-w-7xl mx-auto flex items-center justify-between min-w-max gap-8 px-4">
