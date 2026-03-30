@@ -155,13 +155,13 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
   const getStatusStyles = (status: Feature['status']): string => {
     switch (status) {
       case 'available':
-        return 'bg-[#452829]/20 text-[#452829] border-[#452829]/30';
+        return 'bg-[#191970]/10 text-[#191970] border-[#191970]/30';
       case 'in_development':
-        return 'bg-[#452829]/10 text-[#452829]/70 border-[#452829]/20';
+        return 'bg-[#191970]/5 text-[#191970]/70 border-[#191970]/20';
       case 'pending':
-        return 'bg-[#ede1cd] text-[#452829]/60 border-[#dfcfb5]';
+        return 'bg-[#f5f7f8] text-[#191970]/60 border-[#e1e4e6]';
       default:
-        return 'bg-[#ede1cd] text-[#452829]/60 border-[#dfcfb5]';
+        return 'bg-[#f5f7f8] text-[#191970]/60 border-[#e1e4e6]';
     }
   };
 
@@ -173,7 +173,7 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
       >
         {/* Orbit ring */}
         <div 
-          className="absolute rounded-full border border-[#452829]/10"
+          className="absolute rounded-full border border-[#191970]/10"
           style={{ width: '360px', height: '360px' }}
         />
 
@@ -182,22 +182,22 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
           <div 
             className="w-12 h-12 rounded-full"
             style={{
-              background: 'linear-gradient(135deg, #452829, #5c3537, #452829)',
+              background: 'linear-gradient(135deg, #191970, #252585, #191970)',
               animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              boxShadow: '0 0 30px rgba(69, 40, 41, 0.3)',
+              boxShadow: '0 0 30px rgba(25, 25, 112, 0.2)',
             }}
           />
           <div 
             className="absolute w-5 h-5 rounded-full"
-            style={{ background: 'rgba(247, 231, 206, 0.8)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(236, 239, 241, 0.9)', backdropFilter: 'blur(8px)' }}
           />
           {/* Ping rings */}
           <div 
-            className="absolute w-16 h-16 rounded-full border border-[#452829]/10"
+            className="absolute w-16 h-16 rounded-full border border-[#191970]/10"
             style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }}
           />
           <div 
-            className="absolute w-20 h-20 rounded-full border border-[#452829]/5"
+            className="absolute w-20 h-20 rounded-full border border-[#191970]/5"
             style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite', animationDelay: '0.7s' }}
           />
         </div>
@@ -239,10 +239,10 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                 className={`
                   w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-300 relative z-10
                   ${isActive 
-                    ? 'bg-[#452829] text-[#F7E7CE] border-transparent shadow-[0_0_24px_rgba(69,40,41,0.35)]' 
+                    ? 'bg-[#191970] text-[#ECEFF1] border-transparent shadow-[0_0_24px_rgba(25,25,112,0.3)]' 
                     : isHovered
-                    ? 'bg-[#ede1cd] text-[#452829] border-[#452829]/40'
-                    : 'bg-[#ede1cd] text-[#452829]/70 border-[#452829]/10'
+                    ? 'bg-[#f5f7f8] text-[#191970] border-[#191970]/40'
+                    : 'bg-[#f5f7f8] text-[#191970]/70 border-[#191970]/10'
                   }
                 `}
               >
@@ -256,14 +256,14 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                   ${!isActive ? 'opacity-70' : 'opacity-0'}
                 `}
               >
-                <span className="text-xs font-semibold tracking-wide text-[#452829]/60 group-hover:text-[#452829]">
+                <span className="text-xs font-semibold tracking-wide text-[#191970]/60 group-hover:text-[#191970]">
                   {feature.title}
                 </span>
               </div>
 
               {/* Detail Card (visible when active) */}
               {isActive && (
-                <Card className="absolute top-[80px] left-1/2 -translate-x-1/2 w-72 bg-[#ede1cd]/95 backdrop-blur-xl border-[#452829]/20 shadow-2xl shadow-black/10 overflow-visible" style={{ zIndex: 300, transform: 'scale(1)', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
+                <Card className="absolute top-[80px] left-1/2 -translate-x-1/2 w-72 bg-[#f5f7f8]/95 backdrop-blur-xl border-[#191970]/20 shadow-2xl shadow-black/5 overflow-visible" style={{ zIndex: 300, transform: 'scale(1)', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-zinc-700/60"></div>
                   
                   <CardHeader className="pb-3 px-5 pt-5">

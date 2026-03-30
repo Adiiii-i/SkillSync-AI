@@ -40,39 +40,39 @@
   }
 
   .dark {
-    --card: #dfd4c1;
-    --ring: #452829;
-    --input: #F7E7CE;
-    --muted: #dfd4c1;
-    --accent: #d2c8b7;
-    --border: #452829;
+    --card: #f5f7f8;
+    --ring: #191970;
+    --input: #ECEFF1;
+    --muted: #f5f7f8;
+    --accent: #e1e4e6;
+    --border: #191970;
     --radius: 0.5rem;
-    --chart-1: #452829;
-    --chart-2: #5c3537;
-    --chart-3: #F7E7CE;
-    --chart-4: #452829;
-    --chart-5: #452829;
-    --popover: #dfd4c1;
-    --primary: #452829;
-    --sidebar: #F7E7CE;
-    --secondary: #5c3537;
-    --background: #F7E7CE;
-    --foreground: #452829;
+    --chart-1: #191970;
+    --chart-2: #252585;
+    --chart-3: #ECEFF1;
+    --chart-4: #191970;
+    --chart-5: #191970;
+    --popover: #f5f7f8;
+    --primary: #191970;
+    --sidebar: #ECEFF1;
+    --secondary: #252585;
+    --background: #ECEFF1;
+    --foreground: #191970;
     --destructive: #e54d2e;
-    --sidebar-ring: #452829;
-    --sidebar-accent: #dfd4c1;
-    --sidebar-border: #dfd4c1;
-    --card-foreground: #452829;
-    --sidebar-primary: #452829;
-    --muted-foreground: #452829;
-    --accent-foreground: #452829;
-    --popover-foreground: #452829;
-    --primary-foreground: #F7E7CE;
-    --sidebar-foreground: #452829;
-    --secondary-foreground: #452829;
+    --sidebar-ring: #191970;
+    --sidebar-accent: #f5f7f8;
+    --sidebar-border: #f5f7f8;
+    --card-foreground: #191970;
+    --sidebar-primary: #191970;
+    --muted-foreground: #191970;
+    --accent-foreground: #191970;
+    --popover-foreground: #191970;
+    --primary-foreground: #ECEFF1;
+    --sidebar-foreground: #191970;
+    --secondary-foreground: #191970;
     --destructive-foreground: #ffffff;
-    --sidebar-accent-foreground: #452829;
-    --sidebar-primary-foreground: #F7E7CE;
+    --sidebar-accent-foreground: #191970;
+    --sidebar-primary-foreground: #ECEFF1;
   }
 }
 
@@ -134,36 +134,36 @@
 
 /* ---- CUSTOM PROPERTIES ---- */
 :root {
-  --bg-obsidian: #F7E7CE;
-  --bg-card: #ede1cd;
-  --bg-card-hover: #e2d3bb;
-  --bg-surface: #ede1cd;
-  --bg-elevated: #e2d3bb;
+  --bg-obsidian: #ECEFF1;
+  --bg-card: #f5f7f8;
+  --bg-card-hover: #eef1f3;
+  --bg-surface: #f5f7f8;
+  --bg-elevated: #eef1f3;
 
-  --neon-emerald: #452829;
-  --neon-emerald-dim: #452829;
-  --neon-emerald-glow: rgba(69, 40, 41, 0.1);
-  --neon-emerald-glow-strong: rgba(69, 40, 41, 0.2);
+  --neon-emerald: #191970;
+  --neon-emerald-dim: #191970;
+  --neon-emerald-glow: rgba(25, 25, 112, 0.08);
+  --neon-emerald-glow-strong: rgba(25, 25, 112, 0.15);
 
-  --violet: #452829;
-  --violet-dim: #452829;
-  --violet-glow: rgba(69, 40, 41, 0.1);
+  --violet: #191970;
+  --violet-dim: #191970;
+  --violet-glow: rgba(25, 25, 112, 0.1);
 
-  --text-white: #452829;
-  --text-secondary: #452829;
-  --text-muted: #452829;
-  --text-dim: #452829;
+  --text-white: #191970;
+  --text-secondary: #191970;
+  --text-muted: #191970;
+  --text-dim: #191970;
 
-  --border-glass: 1px solid rgba(69, 40, 41, 0.1);
-  --border-glass-hover: 1px solid rgba(69, 40, 41, 0.2);
-  --border-neon: 1px solid rgba(69, 40, 41, 0.2);
-  --border-dashed-neon: 2px dashed rgba(69, 40, 41, 0.2);
+  --border-glass: 1px solid rgba(25, 25, 112, 0.1);
+  --border-glass-hover: 1px solid rgba(25, 25, 112, 0.2);
+  --border-neon: 1px solid rgba(25, 25, 112, 0.2);
+  --border-dashed-neon: 2px dashed rgba(25, 25, 112, 0.2);
 
-  --shadow-neon: 0 0 30px rgba(69, 40, 41, 0.05);
-  --shadow-neon-strong: 0 0 60px rgba(69, 40, 41, 0.1);
-  --shadow-violet: 0 0 40px rgba(69, 40, 41, 0.1);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --shadow-card-hover: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --shadow-neon: 0 0 30px rgba(25, 25, 112, 0.04);
+  --shadow-neon-strong: 0 0 60px rgba(25, 25, 112, 0.08);
+  --shadow-violet: 0 0 40px rgba(25, 25, 112, 0.08);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 20px 60px rgba(0, 0, 0, 0.12);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -174,7 +174,7 @@
   --font-display: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
 
-  --glass-bg: rgba(247, 231, 206, 0.8);
+  --glass-bg: rgba(236, 239, 241, 0.85);
   --glass-blur: blur(20px);
 }
 
