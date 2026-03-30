@@ -264,7 +264,6 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
               {/* Detail Card (visible when active) */}
               {isActive && (
                 <Card className="absolute top-[80px] left-1/2 -translate-x-1/2 w-72 bg-[#f5f7f8]/95 backdrop-blur-xl border-[#191970]/20 shadow-2xl shadow-black/5 overflow-visible" style={{ zIndex: 300, transform: 'scale(1)', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-zinc-700/60"></div>
                   
                   <CardHeader className="pb-3 px-5 pt-5">
                     <div className="flex justify-between items-center mb-1">
