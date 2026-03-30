@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import FeatureNavigation from './components/blocks/feature-nav';
 import { DotLoader } from './components/ui/dot-loader';
-import { Entropy } from './components/ui/entropy';
 import { Button } from './components/ui/button';
 import ResumePreview from './components/ResumePreview';
 import CoverLetterPreview from './components/CoverLetterPreview';
@@ -173,11 +172,7 @@ export default function App() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30 relative overflow-hidden">
-      {/* Background Entropy Effect - Increased visibility */}
-      <div className="absolute top-0 left-0 w-full h-[700px] pointer-events-none opacity-[0.35] flex items-center justify-center -z-10 translate-y-[-100px]">
-         <Entropy size={1200} color="#191970" />
-      </div>
+    <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30">
       {/* Header */}
       <header className="bg-card text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">
         <div className="max-w-7xl mx-auto flex items-center justify-between min-w-max gap-8 px-4">
@@ -617,24 +612,6 @@ export default function App() {
       </footer>
 
       {/* Legal Modals Overlays */}
-      {loading && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/90 backdrop-blur-xl transition-all animate-in fade-in duration-500">
-          <div className="relative mb-10 flex flex-col items-center justify-center">
-            {/* Analysis Central Visualizer */}
-            <Entropy size={320} color="#191970" className="drop-shadow-[0_0_40px_rgba(25,25,112,0.15)]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-          </div>
-          <div className="text-center px-6">
-            <h3 className="text-2xl font-display font-bold text-foreground mb-3 uppercase tracking-widest glow-text">Analyzing Profile</h3>
-            <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm font-medium">
-              <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
-              Bridging Skills & Opportunities
-            </div>
-          </div>
-        </div>
-      )}
       {modalContent && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm shadow-2xl animate-in fade-in duration-200">
            <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden relative shadow-xl">
