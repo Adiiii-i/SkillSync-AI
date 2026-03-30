@@ -155,13 +155,13 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
   const getStatusStyles = (status: Feature['status']): string => {
     switch (status) {
       case 'available':
-        return 'bg-[#FFE4C4]/20 text-[#FFE4C4] border-[#FFE4C4]/30';
+        return 'bg-[#452829]/20 text-[#452829] border-[#452829]/30';
       case 'in_development':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-[#452829]/10 text-[#452829]/70 border-[#452829]/20';
       case 'pending':
-        return 'bg-zinc-800 text-zinc-400 border-zinc-700';
+        return 'bg-[#ede1cd] text-[#452829]/60 border-[#dfcfb5]';
       default:
-        return 'bg-zinc-800 text-zinc-400 border-zinc-700';
+        return 'bg-[#ede1cd] text-[#452829]/60 border-[#dfcfb5]';
     }
   };
 
@@ -173,7 +173,7 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
       >
         {/* Orbit ring */}
         <div 
-          className="absolute rounded-full border border-zinc-800/60"
+          className="absolute rounded-full border border-[#452829]/10"
           style={{ width: '360px', height: '360px' }}
         />
 
@@ -182,21 +182,22 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
           <div 
             className="w-12 h-12 rounded-full"
             style={{
-              background: 'linear-gradient(135deg, #a78bfa, #3b82f6, #2dd4bf)',
+              background: 'linear-gradient(135deg, #452829, #5c3537, #452829)',
               animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              boxShadow: '0 0 30px rgba(69, 40, 41, 0.3)',
             }}
           />
           <div 
             className="absolute w-5 h-5 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(247, 231, 206, 0.8)', backdropFilter: 'blur(8px)' }}
           />
           {/* Ping rings */}
           <div 
-            className="absolute w-16 h-16 rounded-full border border-white/10"
+            className="absolute w-16 h-16 rounded-full border border-[#452829]/10"
             style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }}
           />
           <div 
-            className="absolute w-20 h-20 rounded-full border border-white/5"
+            className="absolute w-20 h-20 rounded-full border border-[#452829]/5"
             style={{ animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite', animationDelay: '0.7s' }}
           />
         </div>
@@ -238,10 +239,10 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                 className={`
                   w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-300 relative z-10
                   ${isActive 
-                    ? 'bg-[#FFE4C4] text-black border-transparent shadow-[0_0_24px_rgba(255,228,196,0.35)]' 
+                    ? 'bg-[#452829] text-[#F7E7CE] border-transparent shadow-[0_0_24px_rgba(69,40,41,0.35)]' 
                     : isHovered
-                    ? 'bg-zinc-800 text-zinc-100 border-zinc-600'
-                    : 'bg-zinc-900/90 text-zinc-400 border-zinc-800/60'
+                    ? 'bg-[#ede1cd] text-[#452829] border-[#452829]/40'
+                    : 'bg-[#ede1cd] text-[#452829]/70 border-[#452829]/10'
                   }
                 `}
               >
@@ -255,14 +256,14 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                   ${!isActive ? 'opacity-70' : 'opacity-0'}
                 `}
               >
-                <span className="text-xs font-semibold tracking-wide text-zinc-500 group-hover:text-zinc-300">
+                <span className="text-xs font-semibold tracking-wide text-[#452829]/60 group-hover:text-[#452829]">
                   {feature.title}
                 </span>
               </div>
 
               {/* Detail Card (visible when active) */}
               {isActive && (
-                <Card className="absolute top-[80px] left-1/2 -translate-x-1/2 w-72 bg-[#0c0c0c]/95 backdrop-blur-xl border-zinc-800/80 shadow-2xl shadow-black overflow-visible" style={{ zIndex: 300, transform: 'scale(1)', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
+                <Card className="absolute top-[80px] left-1/2 -translate-x-1/2 w-72 bg-[#ede1cd]/95 backdrop-blur-xl border-[#452829]/20 shadow-2xl shadow-black/10 overflow-visible" style={{ zIndex: 300, transform: 'scale(1)', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-zinc-700/60"></div>
                   
                   <CardHeader className="pb-3 px-5 pt-5">
