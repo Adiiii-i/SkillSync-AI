@@ -174,9 +174,9 @@ export default function App() {
 
   return (
     <div className="dark min-h-screen bg-background font-sans text-foreground pb-20 selection:bg-primary/30 relative overflow-hidden">
-      {/* Background Entropy Effect */}
-      <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none opacity-[0.12] flex items-center justify-center -z-10 translate-y-[-100px]">
-         <Entropy size={1000} color="#191970" />
+      {/* Background Entropy Effect - Increased visibility */}
+      <div className="absolute top-0 left-0 w-full h-[700px] pointer-events-none opacity-[0.35] flex items-center justify-center -z-10 translate-y-[-100px]">
+         <Entropy size={1200} color="#191970" />
       </div>
       {/* Header */}
       <header className="bg-card text-card-foreground py-4 px-6 border-b border-border sticky top-0 z-50 overflow-x-auto w-full">

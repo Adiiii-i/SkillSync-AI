@@ -139,6 +139,7 @@ export function Entropy({
     let animationId: number
     
     function animate() {
+      if (!ctx) return;
       ctx.clearRect(0, 0, size, size)
       if (backgroundColor !== 'transparent') {
         ctx.fillStyle = backgroundColor
@@ -151,12 +152,12 @@ export function Entropy({
 
       particles.forEach(particle => {
         particle.update()
-        particle.draw(ctx)
+        if (ctx) particle.draw(ctx)
 
         particle.neighbors.forEach(neighbor => {
           const distance = Math.hypot(particle.x - neighbor.x, particle.y - neighbor.y)
           if (distance < 50) {
-            const alpha = 0.15 * (1 - distance / 50)
+            const alpha = 0.25 * (1 - distance / 50)
             ctx.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${alpha})`
             ctx.lineWidth = 0.5
             ctx.beginPath()
@@ -168,7 +169,7 @@ export function Entropy({
       })
 
       // Divider line
-      ctx.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.15)`
+      ctx.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 0.25)`
       ctx.lineWidth = 1
       ctx.setLineDash([5, 5])
       ctx.beginPath()
