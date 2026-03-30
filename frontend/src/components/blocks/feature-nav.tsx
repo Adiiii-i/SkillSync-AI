@@ -271,35 +271,35 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                       <Badge className={`px-2 py-0 h-5 text-[10px] uppercase font-bold tracking-wider ${getStatusStyles(feature.status)}`}>
                         {feature.status.replace('_', ' ')}
                       </Badge>
-                      <span className="font-mono text-xs text-zinc-500">{feature.date}</span>
+                      <span className="font-mono text-xs text-[#191970]/50">{feature.date}</span>
                     </div>
-                    <CardTitle className="text-[17px] mt-2 text-zinc-100 font-semibold tracking-tight">{feature.title}</CardTitle>
+                    <CardTitle className="text-[17px] mt-2 text-[#191970] font-semibold tracking-tight">{feature.title}</CardTitle>
                   </CardHeader>
                   
-                  <CardContent className="px-5 pb-5 text-sm text-zinc-400">
+                  <CardContent className="px-5 pb-5 text-sm text-[#191970]/80">
                     <p className="leading-relaxed text-[13px]">{feature.content}</p>
 
-                    <div className="mt-5 pt-4 border-t border-zinc-800/80">
-                      <div className="flex justify-between items-center text-[10px] mb-2 uppercase tracking-wider text-zinc-500 font-medium">
+                    <div className="mt-5 pt-4 border-t border-[#191970]/10">
+                      <div className="flex justify-between items-center text-[10px] mb-2 uppercase tracking-wider text-[#191970]/60 font-medium">
                         <span className="flex items-center">
                           <Zap size={11} className="mr-1.5" />
                           Energy Level
                         </span>
                         <span className="font-mono">{feature.energy}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-zinc-800/60 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#191970]/5 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-[#FFE4C4] to-orange-400/80" 
+                          className="h-full bg-gradient-to-r from-[#191970] to-[#252585]" 
                           style={{ width: `${feature.energy}%`, transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)' }}
                         ></div>
                       </div>
                     </div>
 
                     {feature.relatedIds.length > 0 && (
-                      <div className="mt-5 pt-4 border-t border-zinc-800/80">
+                      <div className="mt-5 pt-4 border-t border-[#191970]/10">
                         <div className="flex items-center mb-2.5">
-                          <Link size={11} className="text-zinc-500 mr-1.5" />
-                          <h4 className="text-[10px] uppercase tracking-wider font-medium text-zinc-500">Connected Nodes</h4>
+                          <Link size={11} className="text-[#191970]/60 mr-1.5" />
+                          <h4 className="text-[10px] uppercase tracking-wider font-medium text-[#191970]/60">Connected Nodes</h4>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {feature.relatedIds.map(relId => {
@@ -310,7 +310,7 @@ export default function FeatureNavigation({ activeId, onActionSelect }: FeatureN
                                 key={rel.id}
                                 variant="outline"
                                 size="sm"
-                                className="h-7 px-2.5 text-[11px] rounded-md border-zinc-800/80 bg-zinc-900/50 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                                className="h-7 px-2.5 text-[11px] rounded-md border-[#191970]/20 bg-[#191970]/5 hover:bg-[#191970]/10 hover:border-[#191970]/30 text-[#191970]/70 hover:text-[#191970] transition-colors"
                                 onClick={(e) => { 
                                   e.stopPropagation(); 
                                   const i = features.findIndex(f => f.id === rel.id); 
